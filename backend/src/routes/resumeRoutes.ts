@@ -1,12 +1,14 @@
-import express from 'express';
+import express, { type Response } from 'express';
 import multer from 'multer';
 import { protect } from '../middleware/authMiddleware.js';
 import User from '../models/User.js';
 import { extractTextFromFile } from '../utils/extractText.js';
+import { uploadResumeToS3 } from '../utils/s3.js';
+import type { AuthRequest } from '../types.js';
 
 const router = express.Router();
 
-// Multer storage setup (in-memory)
+// Multer storage setup (in-memory before uploading to S3)
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
@@ -27,11 +29,11 @@ const upload = multer({
 });
 
 /**
- * @desc    Upload resume and extract text
+ * @desc    Upload resume, extract text, store file in S3
  * @route   POST /api/resume/upload
  * @access  Private
  */
-router.post('/upload', protect, upload.single('resume'), async (req: any, res: any) => {
+router.post('/upload', protect, upload.single('resume'), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Please upload a file' });
@@ -39,13 +41,22 @@ router.post('/upload', protect, upload.single('resume'), async (req: any, res: a
 
     const extractedText = await extractTextFromFile(req.file.buffer, req.file.mimetype);
 
-    // Update user's resume text
-    const user = await User.findById(req.user.id);
+    // Upload original file to S3
+    const s3Key = await uploadResumeToS3(
+      String(req.user._id),
+      req.file.buffer,
+      req.file.mimetype,
+      req.file.originalname
+    );
+
+    // Save text + S3 key reference to user
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     user.resumeText = extractedText;
+    user.resumeS3Key = s3Key;
     user.resumeLastUpdated = new Date();
     await user.save();
 
@@ -54,9 +65,10 @@ router.post('/upload', protect, upload.single('resume'), async (req: any, res: a
       message: 'Resume uploaded and analyzed successfully',
       lastUpdated: user.resumeLastUpdated,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Resume Upload Error:', err);
-    res.status(500).json({ success: false, message: err.message });
+    const message = err instanceof Error ? err.message : 'Upload failed';
+    res.status(500).json({ success: false, message });
   }
 });
 
@@ -65,9 +77,9 @@ router.post('/upload', protect, upload.single('resume'), async (req: any, res: a
  * @route   GET /api/resume/status
  * @access  Private
  */
-router.get('/status', protect, async (req: any, res: any) => {
+router.get('/status', protect, async (req: AuthRequest, res: Response) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -77,8 +89,9 @@ router.get('/status', protect, async (req: any, res: any) => {
       hasResume: !!user.resumeText,
       lastUpdated: user.resumeLastUpdated,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    res.status(500).json({ success: false, message });
   }
 });
 

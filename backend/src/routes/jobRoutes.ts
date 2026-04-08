@@ -26,4 +26,5 @@ router.post('/parse', parseJD);
 router.post('/:id/suggest', generateSuggestions);
 router.get('/:id/suggest-stream', generateSuggestionsStream);
 
+
 export default router;

@@ -1,18 +1,20 @@
 import type { Request, Response, NextFunction } from 'express';
 import Job, { type IJob, type ApplicationStatus } from '../models/Job.js';
 import { parseJobDescription, generateResumeSuggestions, generateResumeSuggestionsStream } from '../utils/gemini.js';
+import type { AuthRequest } from '../types.js';
 
 /**
  * @desc    Get all jobs for current user
  * @route   GET /api/jobs
  * @access  Private
  */
-export const getJobs = async (req: any, res: Response, next: NextFunction) => {
+export const getJobs = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const jobs = await Job.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const jobs = await Job.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, count: jobs.length, jobs });
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    res.status(500).json({ success: false, message });
   }
 };
 
@@ -21,13 +23,14 @@ export const getJobs = async (req: any, res: Response, next: NextFunction) => {
  * @route   POST /api/jobs
  * @access  Private
  */
-export const createJob = async (req: any, res: Response, next: NextFunction) => {
+export const createJob = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    req.body.userId = req.user.id;
+    req.body.userId = req.user._id;
     const job = await Job.create(req.body);
     res.status(201).json({ success: true, job });
-  } catch (err: any) {
-    res.status(400).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Bad request';
+    res.status(400).json({ success: false, message });
   }
 };
 
@@ -36,7 +39,7 @@ export const createJob = async (req: any, res: Response, next: NextFunction) => 
  * @route   PUT /api/jobs/:id
  * @access  Private
  */
-export const updateJob = async (req: any, res: Response, next: NextFunction) => {
+export const updateJob = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     let job = await Job.findById(req.params.id);
 
@@ -44,8 +47,7 @@ export const updateJob = async (req: any, res: Response, next: NextFunction) => 
       return res.status(404).json({ success: false, message: 'Job not found' });
     }
 
-    // Make sure user owns the job
-    if (String(job.userId) !== String(req.user.id)) {
+    if (String(job.userId) !== String(req.user._id)) {
       return res.status(401).json({ success: false, message: 'Not authorized to update this job' });
     }
 
@@ -55,8 +57,9 @@ export const updateJob = async (req: any, res: Response, next: NextFunction) => 
     });
 
     res.status(200).json({ success: true, job });
-  } catch (err: any) {
-    res.status(400).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Bad request';
+    res.status(400).json({ success: false, message });
   }
 };
 
@@ -65,7 +68,7 @@ export const updateJob = async (req: any, res: Response, next: NextFunction) => 
  * @route   DELETE /api/jobs/:id
  * @access  Private
  */
-export const deleteJob = async (req: any, res: Response, next: NextFunction) => {
+export const deleteJob = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const job = await Job.findById(req.params.id);
 
@@ -73,16 +76,16 @@ export const deleteJob = async (req: any, res: Response, next: NextFunction) => 
       return res.status(404).json({ success: false, message: 'Job not found' });
     }
 
-    // Make sure user owns the job
-    if (String(job.userId) !== String(req.user.id)) {
+    if (String(job.userId) !== String(req.user._id)) {
       return res.status(401).json({ success: false, message: 'Not authorized to delete this job' });
     }
 
     await job.deleteOne();
 
     res.status(200).json({ success: true, message: 'Job deleted' });
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    res.status(500).json({ success: false, message });
   }
 };
 
@@ -91,7 +94,7 @@ export const deleteJob = async (req: any, res: Response, next: NextFunction) => 
  * @route   POST /api/jobs/parse
  * @access  Private
  */
-export const parseJD = async (req: Request, res: Response, next: NextFunction) => {
+export const parseJD = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { jd } = req.body;
     if (!jd) {
@@ -100,8 +103,9 @@ export const parseJD = async (req: Request, res: Response, next: NextFunction) =
 
     const data = await parseJobDescription(jd);
     res.status(200).json({ success: true, data });
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'AI parsing failed';
+    res.status(500).json({ success: false, message });
   }
 };
 
@@ -110,7 +114,7 @@ export const parseJD = async (req: Request, res: Response, next: NextFunction) =
  * @route   POST /api/jobs/:id/suggest
  * @access  Private
  */
-export const generateSuggestions = async (req: any, res: Response, next: NextFunction) => {
+export const generateSuggestions = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const job = await Job.findById(req.params.id);
 
@@ -128,7 +132,6 @@ export const generateSuggestions = async (req: any, res: Response, next: NextFun
       req.user.resumeText
     );
     
-    // Map to the required format
     const resumeSuggestions = suggestionsTexts.map((text, idx) => ({
       id: `suggestion-${Date.now()}-${idx}`,
       text
@@ -138,16 +141,18 @@ export const generateSuggestions = async (req: any, res: Response, next: NextFun
     await job.save();
 
     res.status(200).json({ success: true, suggestions: resumeSuggestions });
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'AI suggestion failed';
+    res.status(500).json({ success: false, message });
   }
 };
+
 /**
  * @desc    Generate resume suggestions (Streaming)
  * @route   GET /api/jobs/:id/suggest-stream
  * @access  Private
  */
-export const generateSuggestionsStream = async (req: any, res: Response, next: NextFunction) => {
+export const generateSuggestionsStream = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const job = await Job.findById(req.params.id);
 
@@ -159,11 +164,10 @@ export const generateSuggestionsStream = async (req: any, res: Response, next: N
       return res.status(400).json({ success: false, message: 'No job description found for this application' });
     }
 
-    // Set headers for SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no'); // Prevent Nginx buffering
+    res.setHeader('X-Accel-Buffering', 'no');
 
     const stream = generateResumeSuggestionsStream(
       job.rawJobDescription,
@@ -174,17 +178,13 @@ export const generateSuggestionsStream = async (req: any, res: Response, next: N
     let fullText = '';
     for await (const chunk of stream) {
       fullText += chunk;
-      // Send data to client
       res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       
-      // Explicitly flush the response if using compression or certain middleware
-      if ((res as any).flush) {
-        (res as any).flush();
+      if ((res as unknown as { flush?: () => void }).flush) {
+        (res as unknown as { flush: () => void }).flush();
       }
     }
 
-    // Optionally save the full generated text back to the job model 
-    // after cleaning up bullet points
     const lines = fullText.split('\n').filter(l => l.trim().startsWith('•'));
     const resumeSuggestions = lines.map((line, idx) => ({
       id: `suggestion-${Date.now()}-${idx}`,
@@ -198,13 +198,15 @@ export const generateSuggestionsStream = async (req: any, res: Response, next: N
 
     res.write('data: [DONE]\n\n');
     res.end();
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Controller Streaming Error:', err);
+    const message = err instanceof Error ? err.message : 'Streaming error';
     if (!res.headersSent) {
-      res.status(500).json({ success: false, message: err.message });
+      res.status(500).json({ success: false, message });
     } else {
-      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
       res.end();
     }
   }
 };
+

@@ -6,6 +6,15 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
+const MAX_INPUT_LENGTH = 10_000;
+
+/** Strip control characters and cap length to prevent prompt injection and abuse. */
+const sanitizeInput = (text: string): string => {
+  return text
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+    .slice(0, MAX_INPUT_LENGTH);
+};
+
 export interface ParsedJobData {
   company: string;
   role: string;
@@ -24,7 +33,7 @@ export const parseJobDescription = async (jd: string): Promise<ParsedJobData> =>
     
     Job Description:
     """
-    ${jd}
+    ${sanitizeInput(jd)}
     """
     
     Return ONLY a JSON object with the following keys:
@@ -69,7 +78,7 @@ export const generateResumeSuggestions = async (
     
     Job Description:
     """
-    ${jd}
+    ${sanitizeInput(jd)}
     """
     
     ${resumeText ? `
@@ -118,7 +127,7 @@ export const generateResumeSuggestionsStream = async function* (
     
     Job Description:
     """
-    ${jd}
+    ${sanitizeInput(jd)}
     """
     
     ${resumeText ? `
@@ -146,3 +155,4 @@ export const generateResumeSuggestionsStream = async function* (
     throw error;
   }
 };
+

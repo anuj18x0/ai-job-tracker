@@ -3,15 +3,16 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User, { type IUser } from '../models/User.js';
 import sendEmail from '../utils/sendEmail.js';
+import type { AuthRequest } from '../types.js';
 
 // Generate Access and Refresh Tokens
 const generateTokens = (id: string) => {
   const accessToken = jwt.sign({ id }, process.env.JWT_SECRET as string, {
-    expiresIn: (process.env.JWT_EXPIRE as any) || '15m',
+    expiresIn: (process.env.JWT_EXPIRE) as jwt.SignOptions['expiresIn'],
   });
 
   const refreshToken = jwt.sign({ id }, process.env.JWT_REFRESH_SECRET as string, {
-    expiresIn: (process.env.JWT_REFRESH_EXPIRE as any) || '7d',
+    expiresIn: (process.env.JWT_REFRESH_EXPIRE) as jwt.SignOptions['expiresIn'],
   });
 
   return { accessToken, refreshToken };
@@ -89,8 +90,9 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       await user.save({ validateBeforeSave: false });
       return res.status(500).json({ success: false, message: 'Email could not be sent' });
     }
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    res.status(500).json({ success: false, message });
   }
 };
 
@@ -119,8 +121,9 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     await user.save();
 
     res.status(200).json({ success: true, message: 'Email verified successfully' });
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    res.status(500).json({ success: false, message });
   }
 };
 
@@ -148,8 +151,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     sendTokenResponse(user, 200, res);
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    res.status(500).json({ success: false, message });
   }
 };
 
@@ -172,11 +176,12 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
-export const getMe = async (req: any, res: Response, next: NextFunction) => {
+export const getMe = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     res.status(200).json({ success: true, user });
-  } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    res.status(500).json({ success: false, message });
   }
 };

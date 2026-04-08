@@ -14,6 +14,7 @@ export interface IUser extends Document {
   getVerificationToken(): string;
   getResetPasswordToken(): string;
   resumeText?: string;
+  resumeS3Key?: string;
   resumeLastUpdated?: Date;
 }
 
@@ -42,6 +43,7 @@ const UserSchema: Schema = new Schema({
     default: false,
   },
   resumeText: String,
+  resumeS3Key: String,
   resumeLastUpdated: Date,
   verificationToken: String,
   resetPasswordToken: String,

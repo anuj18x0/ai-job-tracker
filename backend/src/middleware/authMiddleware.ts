@@ -1,24 +1,24 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import type { AuthRequest } from '../types.js';
 
-export const protect = async (req: any, res: Response, next: NextFunction) => {
-  let token;
+export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const token = req.cookies?.accessToken;
 
-  if (req.cookies.accessToken) {
-    token = req.cookies.accessToken;
-  }
-
-  // Check if token exists
   if (!token) {
     return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
   }
 
   try {
-    // Verify token
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as jwt.JwtPayload;
+    const user = await User.findById(decoded.id);
 
-    req.user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+
+    req.user = user;
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Not authorized to access this route' });

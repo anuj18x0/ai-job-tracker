@@ -41,8 +41,9 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || '');
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (err: any) {
-    console.error(`Error: ${err.message}`);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`Error: ${message}`);
     process.exit(1);
   }
 };
@@ -51,8 +52,8 @@ connectDB();
 
 const app = express();
 
-// Body parser
-app.use(express.json());
+// Body parser with size limit
+app.use(express.json({ limit: '1mb' }));
 
 // Cookie parser
 app.use(cookieParser());
@@ -93,13 +94,24 @@ app.use('/api/', limiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/resume', resumeRoutes);
+
+// Stricter rate limit for AI endpoints (10 req / 10 min)
+const aiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Too many AI requests, please try again later' },
+});
+app.use('/api/jobs/:id/suggest', aiLimiter);
+app.use('/api/jobs/:id/suggest-stream', aiLimiter);
+app.use('/api/jobs/parse', aiLimiter);
+app.use('/api/jobs/:id/tailored-resume', aiLimiter);
 // Root route
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
 // Error handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled Error:', err);
 
   // Multer error handling
@@ -110,7 +122,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     return res.status(400).json({ success: false, message: err.message });
   }
 
-  res.status(err.status || 500).json({
+  const statusCode = 'status' in err ? (err as Error & { status: number }).status : 500;
+  res.status(statusCode || 500).json({
     success: false,
     message: err.message || 'Server Error',
   });
@@ -123,8 +136,9 @@ const server = app.listen(PORT, () => {
 });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (err: any, promise) => {
-  console.log(`Error: ${err.message}`);
+process.on('unhandledRejection', (err: unknown, promise) => {
+  const message = err instanceof Error ? err.message : 'Unknown error';
+  console.log(`Error: ${message}`);
   // Close server & exit process
   server.close(() => process.exit(1));
 });
