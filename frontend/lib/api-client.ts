@@ -1,3 +1,5 @@
+import type { ApplicationFormData, JobApplication } from '@/types';
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 /**
@@ -58,7 +60,7 @@ export async function getJobApplications() {
     return res.json();
 }
 
-export async function createApplication(data: any) {
+export async function createApplication(data: ApplicationFormData) {
     const res = await fetch(`${BACKEND_URL}/api/jobs`, {
         method: "POST",
         headers: {
@@ -70,7 +72,7 @@ export async function createApplication(data: any) {
     return res.json();
 }
 
-export async function updateApplication(id: string, data: any) {
+export async function updateApplication(id: string, data: Partial<JobApplication>) {
     const res = await fetch(`${BACKEND_URL}/api/jobs/${id}`, {
         method: "PUT",
         headers: {
@@ -173,3 +175,5 @@ export async function logout() {
     });
     return res.json();
 }
+
+

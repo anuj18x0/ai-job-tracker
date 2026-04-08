@@ -85,13 +85,13 @@
   --green-glass: rgba(62, 207, 142, 0.05);
   --green-glass-hover: rgba(62, 207, 142, 0.10);
 
-  --bg-primary: #09090b;
-  --bg-secondary: #111113;
+  --bg-primary: #191919;
+  --bg-secondary: #121212;
   --bg-tertiary: #1a1a1f;
   --bg-elevated: #151518;
   --bg-overlay: rgba(0, 0, 0, 0.7);
 
-  --text-primary: #FAFAFA;
+  --text-primary: #e0e0e0;
   --text-secondary: #A1A1AA;
   --text-tertiary: #71717A;
   --text-inverse: #09090b;

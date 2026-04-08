@@ -21,6 +21,7 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -429,6 +430,7 @@ export default function JobDetailModal({
               </AnimatePresence>
             </div>
 
+
           </div>
         ) : editData && (
           /* ═══ EDIT MODE ═══ */
@@ -488,6 +490,7 @@ export default function JobDetailModal({
           </div>
         )}
       </div>
+
     </Modal>
   );
 }
