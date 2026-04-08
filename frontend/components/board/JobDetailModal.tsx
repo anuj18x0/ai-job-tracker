@@ -4,11 +4,10 @@ import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { Input, Textarea } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import Badge from "@/components/ui/Badge";
 import AISuggestions from "@/components/board/AISuggestions";
-import { generateAISuggestions, generateAISuggestionsStream } from "@/lib/api-client";
+import { generateAISuggestionsStream } from "@/lib/api-client";
 import type { JobApplication, ApplicationStatus, ResumeSuggestion } from "@/types";
-import { STATUS_COLORS, STATUS_LABELS } from "@/lib/constants";
+import { STATUS_LABELS } from "@/lib/constants";
 import { 
   Building2, 
   MapPin, 
@@ -17,12 +16,11 @@ import {
   ExternalLink, 
   Pencil, 
   Trash2, 
-  Check, 
   Sparkles,
-  ChevronRight,
   Briefcase,
   Bell,
-  Info
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -49,6 +47,7 @@ export default function JobDetailModal({
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [aiExpanded, setAiExpanded] = useState(false);
 
   const handleEdit = () => {
     if (application) {
@@ -79,6 +78,7 @@ export default function JobDetailModal({
     setIsStreaming(true);
     setStreamingText("");
     setSuggestions([]);
+    setAiExpanded(true);
 
     try {
       let finalText = "";
@@ -118,326 +118,375 @@ export default function JobDetailModal({
   useEffect(() => {
     if (application && application.resumeSuggestions) {
       setSuggestions(application.resumeSuggestions);
+      // Auto-expand if suggestions exist
+      if (application.resumeSuggestions.length > 0) {
+        setAiExpanded(true);
+      }
     } else {
       setSuggestions([]);
     }
   }, [application]);
 
+  // Reset state on close
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditing(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [isOpen]);
+
   if (!application) return null;
 
   const data = isEditing && editData ? editData : application;
 
-  const statusBadgeColor = (status: ApplicationStatus): "green" | "blue" | "red" | "orange" | "purple" | "gray" => {
-    const map: Record<ApplicationStatus, any> = {
-      applied: "blue",
-      phone_screen: "orange",
-      interview: "purple",
-      offer: "green",
-      rejected: "red"
-    };
-    return map[status] || "gray";
+  const daysAgo = Math.floor(
+    (Date.now() - new Date(data.dateApplied).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const dateLabel = daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo}d ago`;
+
+  // Group skills into categories (simple heuristic)
+  const groupSkills = (skills: string[]) => {
+    if (skills.length <= 4) return null; // Don't group if few
+    const displayed = skills.slice(0, 5);
+    const remaining = skills.length - 5;
+    return { displayed, remaining };
   };
+
+  const statusBadgeStyles: Record<ApplicationStatus, string> = {
+    applied: "bg-amber-500/10 text-amber-600",
+    phone_screen: "bg-blue-500/10 text-blue-500",
+    interview: "bg-purple-500/10 text-purple-500",
+    offer: "bg-emerald-500/10 text-emerald-600",
+    rejected: "bg-red-500/10 text-red-500",
+  };
+
+  // Fixed header content
+  const headerContent = (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-lg font-semibold text-foreground leading-snug">
+          {data.role}
+        </h2>
+        <span className={cn(
+          "px-2.5 py-0.5 rounded-md text-[11px] font-medium shrink-0",
+          statusBadgeStyles[data.status] || "bg-secondary text-muted-foreground"
+        )}>
+          {STATUS_LABELS[data.status]}
+        </span>
+      </div>
+      <span className="text-sm text-muted-foreground">
+        {data.company}
+      </span>
+      <div className="flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground/50">
+        {data.location && (
+          <>
+            <span>{data.location}</span>
+            <span>•</span>
+          </>
+        )}
+        {data.seniority && (
+          <>
+            <span>{data.seniority}</span>
+            <span>•</span>
+          </>
+        )}
+        <span>{dateLabel}</span>
+        {data.salaryRange && (
+          <>
+            <span>•</span>
+            <span>{data.salaryRange}</span>
+          </>
+        )}
+        {data.followUpDate && (
+          <>
+            <span>•</span>
+            <span className={cn(
+              "font-medium",
+              new Date(data.followUpDate) < new Date() ? "text-red-400" : "text-amber-400"
+            )}>
+              Follow-up {new Date(data.followUpDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  // Fixed footer content (view mode)
+  const footerContent = !isEditing ? (
+    <div className="flex items-center justify-between w-full">
+      {showDeleteConfirm ? (
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">Delete this?</span>
+          <button
+            onClick={() => setShowDeleteConfirm(false)}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDelete}
+            className="text-xs text-red-500 hover:text-red-400 transition-colors"
+          >
+            Confirm
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          className="text-xs text-muted-foreground/30 hover:text-red-400 transition-colors"
+        >
+          Delete
+        </button>
+      )}
+      <button
+        onClick={handleEdit}
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Pencil className="w-3.5 h-3.5" />
+        Edit
+      </button>
+    </div>
+  ) : (
+    <div className="flex items-center justify-end gap-3 w-full">
+      <button
+        onClick={() => setIsEditing(false)}
+        className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSave}
+        className="px-4 py-2 rounded-lg text-sm font-medium bg-green text-white hover:bg-green/90 transition-colors"
+      >
+        Save
+      </button>
+    </div>
+  );
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      maxWidth="max-w-4xl"
-      className="p-0"
-      footer={
-        <div className="flex items-center justify-between w-full">
-          {!isEditing && (
-            <div>
-              {showDeleteConfirm ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-[11px] font-bold text-red-500 uppercase tracking-wider">Are you sure?</span>
-                  <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
-                    <Button variant="danger" size="sm" onClick={handleDelete} className="bg-red-500 hover:bg-red-600">Delete</Button>
-                  </div>
-                </div>
-              ) : (
-                <button 
-                  onClick={() => setShowDeleteConfirm(true)} 
-                  className="text-[11px] font-bold text-red-400 hover:text-red-500 transition-colors uppercase tracking-widest"
-                >
-                  Delete Application
-                </button>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 ml-auto">
-            {isEditing ? (
-              <>
-                <Button variant="secondary" onClick={() => setIsEditing(false)}>Cancel</Button>
-                <Button onClick={handleSave}>Save Changes</Button>
-              </>
-            ) : (
-              <Button onClick={handleEdit} className="bg-foreground text-background hover:bg-foreground/90">
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Details
-              </Button>
-            )}
-          </div>
-        </div>
-      }
+      maxWidth="max-w-2xl"
+      header={headerContent}
+      footer={footerContent}
     >
       <div className="flex flex-col">
-        {/* Header Section */}
-        <div className="flex items-center justify-between gap-6 pb-8 border-b border-border/50">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-secondary/50 flex items-center justify-center border border-border/50 shadow-sm">
-              <Building2 className="w-8 h-8 text-foreground/70" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h2 className="text-3xl font-black tracking-tight leading-none text-foreground">
-                {data.company}
-              </h2>
-              <p className="text-lg font-bold text-muted-foreground">
-                {data.role}
-              </p>
-            </div>
-          </div>
-          <Badge 
-            label={STATUS_LABELS[data.status]} 
-            color={statusBadgeColor(data.status)}
-            variant="subtle"
-            className="px-4 py-1.5 text-xs"
-          />
-        </div>
 
-        <div className="py-8 space-y-10">
-          {/* Info Grid Section */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 rounded-[24px] bg-secondary/20 border border-border/30">
-            {[
-              { label: "Location", value: data.location, icon: MapPin },
-              { label: "Seniority", value: data.seniority, icon: Briefcase },
-              { label: "Applied", value: data.dateApplied ? new Date(data.dateApplied).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : undefined, icon: Calendar },
-              { 
-                label: "Follow-up", 
-                value: data.followUpDate ? new Date(data.followUpDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : undefined, 
-                icon: Bell,
-                isOverdue: data.followUpDate ? new Date(data.followUpDate) < new Date() : false
-              },
-            ]
-            .filter(i => i.value)
-            .map((item) => (
-              <div key={item.label} className="flex flex-col gap-2">
-                <div className="flex items-center gap-1.5 text-muted-foreground/60">
-                  <item.icon className={cn("w-3.5 h-3.5", (item as any).isOverdue && "text-red-500")} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
-                </div>
-                <span className={cn("text-[14px] font-bold", (item as any).isOverdue ? "text-red-500" : "text-foreground")}>
-                  {item.value || "—"}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {!isEditing ? (
-            /* View Mode: Vertical Stack Layout */
-            <div className="space-y-12">
-              {/* Row 1: Skills Grid (2-Column) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                {/* Required Skills */}
-                <div className="space-y-4">
-                  <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-green" />
-                    Required Skills
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.requiredSkills.slice(0, 12).map(skill => (
-                      <Badge key={skill} label={skill} color="gray" className="rounded-xl px-3" />
-                    ))}
-                    {data.requiredSkills.length > 12 && (
-                      <Badge label={`+${data.requiredSkills.length - 12} more`} color="green" variant="glass" className="rounded-xl" />
-                    )}
-                    {data.requiredSkills.length === 0 && (
-                      <span className="text-xs text-muted-foreground font-medium italic">Not specified</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Nice To Have Skills */}
-                <div className="space-y-4 border-l border-border/20 md:pl-10">
-                  <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                    Nice to Have
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {data.niceToHaveSkills?.slice(0, 12).map(skill => (
-                      <Badge key={skill} label={skill} color="blue" variant="subtle" className="rounded-xl px-3" />
-                    ))}
-                    {(data.niceToHaveSkills?.length || 0) > 12 && (
-                      <Badge label={`+${(data.niceToHaveSkills?.length || 0) - 12} more`} color="blue" variant="glass" className="rounded-xl" />
-                    )}
-                    {(data.niceToHaveSkills?.length || 0) === 0 && (
-                      <span className="text-xs text-muted-foreground font-medium italic">None listed</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 2: AI Optimization (Full Width) */}
-              <div className="space-y-6">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-green/10">
-                        <Sparkles className="w-5 h-5 text-green" />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <h4 className="text-[14px] font-black text-foreground uppercase tracking-wider">AI Resume Optimization</h4>
-                        <p className="text-xs text-muted-foreground font-medium">
-                          Optimized bullet points tailored specifically for this JD and your unique skill set.
-                        </p>
-                      </div>
+        {!isEditing ? (
+          /* ═══ VIEW MODE ═══ */
+          <div className="flex flex-col gap-6">
+            {/* ── SKILLS ── */}
+            {(data.requiredSkills.length > 0 || (data.niceToHaveSkills?.length || 0) > 0) && (
+              <div className="flex flex-col gap-4">
+                {/* Required */}
+                {data.requiredSkills.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wide">
+                      Required
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {(() => {
+                        const grouped = groupSkills(data.requiredSkills);
+                        const display = grouped ? grouped.displayed : data.requiredSkills;
+                        const remaining = grouped ? grouped.remaining : 0;
+                        return (
+                          <>
+                            {display.map(skill => (
+                              <span key={skill} className="px-2 py-0.5 rounded-md bg-secondary/60 text-xs text-foreground/70">
+                                {skill}
+                              </span>
+                            ))}
+                            {remaining > 0 && (
+                              <span className="text-xs text-muted-foreground/40">
+                                +{remaining} more
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
-                    
-                    {!isStreaming && suggestions.length > 0 && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleGenerateSuggestions}
-                        className="text-[11px] font-bold uppercase tracking-widest px-4 h-9"
-                      >
-                        Regenerate
-                      </Button>
-                    )}
                   </div>
+                )}
 
-                  <div className="relative p-6 rounded-[24px] bg-foreground/5 border border-border/50 shadow-sm overflow-hidden">
-                    <div className="max-h-[500px] overflow-y-auto custom-scrollbar -mx-2 px-2">
+                {/* Nice to Have */}
+                {(data.niceToHaveSkills?.length || 0) > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wide">
+                      Nice to have
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {(() => {
+                        const skills = data.niceToHaveSkills || [];
+                        const grouped = groupSkills(skills);
+                        const display = grouped ? grouped.displayed : skills;
+                        const remaining = grouped ? grouped.remaining : 0;
+                        return (
+                          <>
+                            {display.map(skill => (
+                              <span key={skill} className="px-2 py-0.5 rounded-md bg-secondary/40 text-xs text-muted-foreground/60">
+                                {skill}
+                              </span>
+                            ))}
+                            {remaining > 0 && (
+                              <span className="text-xs text-muted-foreground/30">
+                                +{remaining} more
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── NOTES ── */}
+            {data.notes && (
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-medium text-muted-foreground/50 uppercase tracking-wide">
+                  Notes
+                </span>
+                <p className="text-sm leading-relaxed text-foreground/60 whitespace-pre-wrap">
+                  {data.notes}
+                </p>
+              </div>
+            )}
+
+            {/* JD Link — inline, simple */}
+            {data.jdLink && (
+              <a
+                href={data.jdLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/40 hover:text-green transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                View original posting
+              </a>
+            )}
+
+            {/* ── AI RESUME SUGGESTIONS — Collapsible ── */}
+            <div className="flex flex-col mt-2">
+              {/* Toggle Header */}
+              <button
+                onClick={() => setAiExpanded(!aiExpanded)}
+                className="flex items-center justify-between py-2 group"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-green/60" />
+                  <span className="text-sm font-medium text-foreground/80">
+                    AI Resume Suggestions
+                  </span>
+                  {suggestions.length > 0 && !aiExpanded && (
+                    <span className="text-[10px] text-muted-foreground/40">
+                      {suggestions.length} suggestions
+                    </span>
+                  )}
+                </div>
+                {aiExpanded ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-muted-foreground/30" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/30" />
+                )}
+              </button>
+
+              {/* Collapsible Content */}
+              <AnimatePresence initial={false}>
+                {aiExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-1 pb-2">
                       <AISuggestions
                         suggestions={suggestions}
                         isLoading={isSuggestionsLoading}
-                        onRegenerate={undefined} // Hide regenerate inside list since we have top button
+                        onRegenerate={suggestions.length > 0 && !isStreaming ? handleGenerateSuggestions : undefined}
                         streamingText={streamingText}
                         isStreaming={isStreaming}
                       />
                       
                       {suggestions.length === 0 && !isSuggestionsLoading && (
-                        <div className="flex flex-col items-center justify-center py-10 gap-5 text-center">
-                          <p className="text-sm text-muted-foreground max-w-xs font-medium italic">
-                            No suggestions yet. Let AI analyze the job to generate high-impact bullet points.
-                          </p>
-                          <Button
+                        <div className="py-4">
+                          <button
                             onClick={handleGenerateSuggestions}
-                            className="bg-green text-green-950 hover:bg-green/90 px-8 font-black uppercase tracking-widest text-[11px] h-10 shadow-lg shadow-green/20"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-green/10 text-green hover:bg-green/15 transition-colors"
                           >
+                            <Sparkles className="w-3.5 h-3.5" />
                             Generate Suggestions
-                          </Button>
+                          </button>
                         </div>
                       )}
                     </div>
-
-                    {isStreaming && (
-                      <motion.div 
-                        animate={{ opacity: [0.1, 0.4, 0.1] }}
-                        transition={{ repeat: Infinity, duration: 2.5 }}
-                        className="absolute inset-0 pointer-events-none bg-gradient-to-br from-green/5 to-transparent" 
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 3: Notes & Links (Footer-ish) */}
-              {(data.notes || data.jdLink) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  {data.notes && (
-                    <div className="space-y-4">
-                      <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                        <Info className="w-3.5 h-3.5" />
-                        Personal Notes
-                      </h4>
-                      <p className="text-[13px] leading-relaxed text-foreground/80 font-medium whitespace-pre-wrap pl-6 border-l-2 border-border/50">
-                        {data.notes}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {data.jdLink && (
-                    <div className="space-y-4">
-                      <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        Original Job Posting
-                      </h4>
-                      <a
-                        href={data.jdLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex items-center justify-between p-4 rounded-2xl bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-all"
-                      >
-                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest truncate max-w-[200px]">
-                          {data.jdLink}
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-green transition-transform group-hover:translate-x-1" />
-                      </a>
-                    </div>
-                  )}
-                </div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          ) : editData && (
-            /* Edit Mode: Simple Form */
-            <div className="flex flex-col gap-6 py-2">
-              <div className="grid grid-cols-2 gap-5">
-                <Input
-                  label="Company"
-                  value={editData.company}
-                  onChange={(e) => setEditData({ ...editData, company: e.target.value })}
-                />
-                <Input
-                  label="Role"
-                  value={editData.role}
-                  onChange={(e) => setEditData({ ...editData, role: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-5">
-                <Input
-                  label="Location"
-                  value={editData.location || ""}
-                  onChange={(e) => setEditData({ ...editData, location: e.target.value })}
-                />
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Status</label>
-                  <select
-                    value={editData.status}
-                    onChange={(e) => setEditData({ ...editData, status: e.target.value as ApplicationStatus })}
-                    className="w-full bg-secondary/50 border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-green/20 focus:border-green cursor-pointer transition-all"
-                  >
-                    {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                      <option key={key} value={key}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-5">
-                <Input
-                  label="Required Skills (comma separated)"
-                  value={editData.requiredSkills.join(", ")}
-                  onChange={(e) => setEditData({ ...editData, requiredSkills: e.target.value.split(",").map(s => s.trim()).filter(s => s) })}
-                />
-                <Input
-                  label="Nice to Have (comma separated)"
-                  value={editData.niceToHaveSkills?.join(", ") || ""}
-                  onChange={(e) => setEditData({ ...editData, niceToHaveSkills: e.target.value.split(",").map(s => s.trim()).filter(s => s) })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-5">
-                <Input label="Date Applied" type="date" value={editData.dateApplied} onChange={(e) => setEditData({ ...editData, dateApplied: e.target.value })} />
-                <Input label="Salary Range" value={editData.salaryRange || ""} onChange={(e) => setEditData({ ...editData, salaryRange: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-5">
-                <Input label="Follow-up Date" type="date" value={editData.followUpDate ? new Date(editData.followUpDate).toISOString().split('T')[0] : ""} onChange={(e) => setEditData({ ...editData, followUpDate: e.target.value })} />
-                <Input label="JD Link" value={editData.jdLink || ""} onChange={(e) => setEditData({ ...editData, jdLink: e.target.value })} />
-              </div>
-              <Textarea label="Notes" value={editData.notes || ""} onChange={(e) => setEditData({ ...editData, notes: e.target.value })} className="min-h-[120px]" />
+
+          </div>
+        ) : editData && (
+          /* ═══ EDIT MODE ═══ */
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Company"
+                value={editData.company}
+                onChange={(e) => setEditData({ ...editData, company: e.target.value })}
+              />
+              <Input
+                label="Role"
+                value={editData.role}
+                onChange={(e) => setEditData({ ...editData, role: e.target.value })}
+              />
             </div>
-          )}
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Location"
+                value={editData.location || ""}
+                onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+              />
+              <div className="flex flex-col gap-1.5" style={{ marginBottom: "16px" }}>
+                <label className="text-[13px] font-semibold" style={{ color: "var(--text-secondary)", letterSpacing: "0.02em" }}>Status</label>
+                <select
+                  value={editData.status}
+                  onChange={(e) => setEditData({ ...editData, status: e.target.value as ApplicationStatus })}
+                  className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded-lg py-2.5 px-3.5 text-sm focus:outline-none focus:ring-1 focus:ring-green/30 focus:border-green cursor-pointer transition-all"
+                >
+                  {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Required Skills (comma separated)"
+                value={editData.requiredSkills.join(", ")}
+                onChange={(e) => setEditData({ ...editData, requiredSkills: e.target.value.split(",").map(s => s.trim()).filter(s => s) })}
+              />
+              <Input
+                label="Nice to Have (comma separated)"
+                value={editData.niceToHaveSkills?.join(", ") || ""}
+                onChange={(e) => setEditData({ ...editData, niceToHaveSkills: e.target.value.split(",").map(s => s.trim()).filter(s => s) })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Date Applied" type="date" value={editData.dateApplied} onChange={(e) => setEditData({ ...editData, dateApplied: e.target.value })} />
+              <Input label="Salary Range" value={editData.salaryRange || ""} onChange={(e) => setEditData({ ...editData, salaryRange: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Follow-up Date" type="date" value={editData.followUpDate ? new Date(editData.followUpDate).toISOString().split('T')[0] : ""} onChange={(e) => setEditData({ ...editData, followUpDate: e.target.value })} />
+              <Input label="JD Link" value={editData.jdLink || ""} onChange={(e) => setEditData({ ...editData, jdLink: e.target.value })} />
+            </div>
+            <Textarea label="Notes" value={editData.notes || ""} onChange={(e) => setEditData({ ...editData, notes: e.target.value })} className="min-h-[100px]" />
+          </div>
+        )}
       </div>
     </Modal>
   );

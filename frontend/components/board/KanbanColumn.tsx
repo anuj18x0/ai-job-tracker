@@ -3,7 +3,7 @@
 import type { DragEvent, ReactNode } from "react";
 import type { ApplicationStatus } from "@/types";
 import { STATUS_COLORS } from "@/lib/constants";
-import { Plus, MoreHorizontal } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useBoard } from "@/context/BoardContext";
 
 interface KanbanColumnProps {
@@ -27,16 +27,16 @@ export default function KanbanColumn({
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    e.currentTarget.classList.add("bg-muted/50", "border-green/50", "border-dashed");
+    e.currentTarget.classList.add("ring-1", "ring-green/30", "bg-green/[0.02]");
   };
 
   const handleDragLeave = (e: DragEvent) => {
-    e.currentTarget.classList.remove("bg-muted/50", "border-green/50", "border-dashed");
+    e.currentTarget.classList.remove("ring-1", "ring-green/30", "bg-green/[0.02]");
   };
 
   const handleDrop = (e: DragEvent) => {
     e.preventDefault();
-    e.currentTarget.classList.remove("bg-muted/50", "border-green/50", "border-dashed");
+    e.currentTarget.classList.remove("ring-1", "ring-green/30", "bg-green/[0.02]");
     const applicationId = e.dataTransfer.getData("applicationId");
     if (applicationId) {
       onDrop(applicationId, id);
@@ -48,50 +48,45 @@ export default function KanbanColumn({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="flex flex-col flex-1 min-w-[200px] bg-secondary/30 rounded-2xl border border-transparent transition-all duration-200 h-full max-h-[calc(100vh-140px)]"
+      className="flex flex-col flex-1 min-w-[220px] rounded-xl transition-all duration-200 h-full max-h-[calc(100vh-140px)]"
     >
       {/* Column Header */}
-      <div className="flex items-center justify-between px-4 py-4">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between px-2 py-3">
+        <div className="flex items-center gap-2">
           <div 
-            className="w-2.5 h-2.5 rounded-full shadow-sm" 
+            className="w-2 h-2 rounded-full" 
             style={{ backgroundColor: statusColor }} 
           />
-          <h4 className="text-sm text-foreground tracking-tight uppercase">
+          <span className="text-lg font-semibold text-muted-foreground tracking-wide">
             {title}
-          </h4>
-          <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-secondary text-[10px] font-bold text-muted-foreground border border-border">
+          </span>
+          <span className="text-xs text-muted-foreground/40 font-medium tabular-nums">
             {count}
           </span>
         </div>
         
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => openAddModal(id)}
-            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-green transition-all"
-            title={`Add to ${title}`}
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-          <button className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground transition-all">
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          onClick={() => openAddModal(id)}
+          className="p-1 rounded-md text-muted-foreground/30 hover:text-muted-foreground hover:bg-secondary/50 transition-all"
+          title={`Add to ${title}`}
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Cards Area */}
-      <div className="flex-1 flex flex-col gap-3 px-3 pb-6 overflow-y-auto no-scrollbar scroll-smooth">
+      <div className="flex-1 flex flex-col gap-2 px-1 pb-4 overflow-y-auto no-scrollbar scroll-smooth">
         {children}
         
         {/* Placeholder for empty column */}
         {count === 0 && (
           <button
             onClick={() => openAddModal(id)}
-            className="flex flex-col items-center justify-center py-8 rounded-xl border-2 border-dashed border-border opacity-15 hover:opacity-100 hover:border-green/30 hover:bg-green-glass transition-all group"
+            className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-border/30 opacity-40 hover:opacity-100 hover:border-green/30 hover:bg-green/[0.02] transition-all group"
           >
-            <Plus className="w-5 h-5 text-muted-foreground/40 group-hover:text-green transition-colors mb-1" />
-            <span className="text-xs font-medium text-muted-foreground/60 group-hover:text-green/80 transition-colors">
-              Add Application
+            <Plus className="w-4 h-4 text-muted-foreground/40 group-hover:text-green transition-colors mb-1" />
+            <span className="text-[11px] font-medium text-muted-foreground/40 group-hover:text-green/70 transition-colors">
+              Add
             </span>
           </button>
         )}

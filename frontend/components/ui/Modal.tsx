@@ -9,6 +9,7 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  header?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   maxWidth?: string;
@@ -19,6 +20,7 @@ export default function Modal({
   isOpen,
   onClose,
   title,
+  header,
   children,
   footer,
   maxWidth = "max-w-xl",
@@ -52,44 +54,48 @@ export default function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-xl transition-all"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-all"
           />
 
           {/* Panel */}
           <motion.div
             role="dialog"
             aria-modal="true"
-            initial={{ opacity: 0, scale: 0.97, y: 15 }}
+            initial={{ opacity: 0, scale: 0.98, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 15 }}
+            exit={{ opacity: 0, scale: 0.98, y: 10 }}
             transition={{ type: "spring", damping: 30, stiffness: 400 }}
             className={cn(
-              "relative w-full bg-background border border-border/60 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)] overflow-hidden flex flex-col max-h-[90vh]",
+              "relative w-full bg-background border border-border/40 rounded-xl shadow-md overflow-hidden flex flex-col max-h-[90vh]",
               maxWidth,
               className
             )}
           >
-            {/* Header */}
-            {title && (
-              <div className="flex items-center justify-between px-8 py-6 border-b border-border/40 bg-secondary/10">
-                <h3 className="text-xl font-black tracking-tight">{title}</h3>
+            {/* Fixed Header — custom or title-based */}
+            {header ? (
+              <div className="shrink-0 px-6 pt-6 pb-4">
+                {header}
+              </div>
+            ) : title ? (
+              <div className="shrink-0 flex items-center justify-between px-6 py-4">
+                <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-xl hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-all group"
+                  className="p-1.5 rounded-lg hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-all"
                 >
-                  <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
-            )}
+            ) : null}
 
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
               {children}
             </div>
 
-            {/* Footer */}
+            {/* Fixed Footer */}
             {footer && (
-              <div className="px-8 py-6 bg-secondary/30 border-t border-border/40 flex items-center justify-end gap-3 backdrop-blur-sm">
+              <div className="shrink-0 px-6 py-4 flex items-center justify-end gap-3">
                 {footer}
               </div>
             )}

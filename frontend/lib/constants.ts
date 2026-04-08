@@ -17,11 +17,11 @@ export const KANBAN_COLUMNS: { id: ApplicationStatus; title: string }[] = [
 // ========================================
 
 export const STATUS_COLORS: Record<ApplicationStatus, string> = {
-  applied: "#3ECF8E",
+  applied: "#FBBF24",
   phone_screen: "#60A5FA",
   interview: "#A78BFA",
-  offer: "#F59E0B",
-  rejected: "#EF4444",
+  offer: "#34D399",
+  rejected: "#F87171",
 };
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {

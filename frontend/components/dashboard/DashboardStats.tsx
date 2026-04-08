@@ -1,14 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { 
-  Briefcase, 
-  Target, 
-  MessageSquare, 
-  CheckCircle2, 
-  XCircle,
-  TrendingUp
-} from "lucide-react";
 import type { JobApplication } from "@/types";
 
 interface DashboardStatsProps {
@@ -19,73 +11,40 @@ export default function DashboardStats({ applications }: DashboardStatsProps) {
   const total = applications.length;
   const interviewing = applications.filter(a => a.status === 'interview' || a.status === 'phone_screen').length;
   const offers = applications.filter(a => a.status === 'offer').length;
-  const rejected = applications.filter(a => a.status === 'rejected').length;
   
   const successRate = total > 0 ? Math.round((offers / total) * 100) : 0;
 
   const stats = [
-    {
-      label: "Total Apps",
-      value: total,
-      icon: Briefcase,
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
-    },
-    {
-      label: "Interviewing",
-      value: interviewing,
-      icon: MessageSquare,
-      color: "text-purple-500",
-      bg: "bg-purple-500/10",
-    },
-    {
-      label: "Offers",
-      value: offers,
-      icon: CheckCircle2,
-      color: "text-green",
-      bg: "bg-green/10",
-    },
-    {
-      label: "Success Rate",
-      value: `${successRate}%`,
-      icon: Target,
-      color: "text-orange-500",
-      bg: "bg-orange-500/10",
-    },
+    { label: "Total", value: total },
+    { label: "Interviewing", value: interviewing },
+    { label: "Offers", value: offers },
+    { label: "Success", value: `${successRate}%` },
   ];
 
   return (
-    <div className="px-6 py-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="py-3"
+    >
+      <div className="flex items-center gap-6">
         {stats.map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="relative overflow-hidden group p-5 rounded-2xl bg-secondary/30 border border-border/50 hover:bg-secondary/50 hover:border-border transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  {stat.label}
-                </span>
-                <span className="text-2xl font-black tracking-tight text-foreground">
-                  {stat.value}
-                </span>
-              </div>
-              {/* <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.color}`}>
-                <stat.icon className="w-5 h-5" strokeWidth={2.5} />
-              </div> */}
+          <div key={stat.label} className="flex items-center gap-6">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-bold tracking-tight text-foreground tabular-nums">
+                {stat.value}
+              </span>
+              <span className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide">
+                {stat.label}
+              </span>
             </div>
-            
-            {/* Subtle background decoration */}
-            <div className="absolute right-4 bottom-2 opacity-5 group-hover:opacity-10 transition-opacity">
-              <stat.icon className="w-20 h-20" />
-            </div>
-          </motion.div>
+            {index < stats.length - 1 && (
+              <div className="w-px h-4 bg-border/40" />
+            )}
+          </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
