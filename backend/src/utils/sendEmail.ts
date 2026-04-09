@@ -9,22 +9,23 @@ interface EmailOptions {
 const sendEmail = async (options: EmailOptions) => {
 
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  const FROM_MAIL = process.env.MAIL_FROM as string;
 
-  if (RESEND_API_KEY) {
+  if (!RESEND_API_KEY) {
     throw new Error('RESEND_API_KEY is not defined in the environment variables');
   }
 
   const resend = new Resend(RESEND_API_KEY);
 
   const { data, error } = await resend.emails.send({
-    from: `${process.env.MAIL_FROM}>`,
+    from: FROM_MAIL,
     to: [options.email],
     subject: options.subject,
     text: options.message,
   });
 
   if (error) {
-    console.error('Resend API Error:', error);
+    console.log('Resend API Error:', error);
     throw new Error(`Email sending failed: ${error.message}`);
   }
 

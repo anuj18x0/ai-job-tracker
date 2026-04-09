@@ -85,10 +85,10 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         success: true,
         message: 'Registration successful. Please check your email to verify your account.',
       });
-    } catch (err) {
+    } catch (err: unknown) {
       user.verificationToken = undefined;
       await user.save({ validateBeforeSave: false });
-      return res.status(500).json({ success: false, message: 'Email could not be sent' });
+      return res.status(500).json({ success: false, message: "Email could not be sent" });
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Server error';
