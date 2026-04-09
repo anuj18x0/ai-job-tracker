@@ -4,160 +4,47 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div
-      className="mesh-bg"
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 24px",
-        minHeight: "100vh",
-        background: "var(--bg-primary)",
-        position: "relative",
-      }}
-    >
+    <div className="mesh-bg flex-1 flex flex-col items-center justify-center px-6 min-h-screen relative bg-[var(--bg-primary)]">
       {/* Background Grid */}
-      <div
-        className="grid-bg"
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 0,
-        }}
-      />
+      <div className="grid-bg absolute inset-0 z-0" />
 
       {/* Hero Content */}
-      <div
-        className="animate-fade-in-up"
-        style={{
-          maxWidth: "920px",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-          zIndex: 1,
-        }}
-      >
+      <div className="animate-fade-in-up w-full max-w-[920px] flex flex-col items-center text-center z-10">
         {/* Tagline Badge */}
-        <div
-          style={{
-            padding: "8px 16px",
-            background: "var(--green-glass)",
-            borderRadius: "var(--radius-full)",
-            color: "var(--green)",
-            fontSize: "12px",
-            fontWeight: 800,
-            textTransform: "uppercase",
-            letterSpacing: "0.15em",
-            marginBottom: "24px",
-            border: "1px solid var(--green)",
-          }}
-        >
+        <div className="px-4 py-2 bg-[var(--green-glass)] rounded-full text-[var(--green)] text-xs font-extrabold uppercase tracking-[0.15em] mb-6 border border-[var(--green)]">
           AI-Powered Job Tracking
         </div>
 
         {/* Hero Title */}
-        <h1 className="hero-text gradient-text" style={{ marginBottom: "20px" }}>
+        <h1 className="hero-text gradient-text mb-5">
           Track Job Applications <br /> with AI precision
         </h1>
 
         {/* Hero Description */}
-        <p
-          style={{
-            fontSize: "clamp(1rem, 3vw, 1.25rem)",
-            color: "var(--text-secondary)",
-            maxWidth: "600px",
-            marginBottom: "40px",
-            lineHeight: 1.6,
-            fontWeight: 500,
-          }}
-        >
+        <p className="text-[clamp(1rem,3vw,1.25rem)] text-[var(--text-secondary)] max-w-[600px] mb-10 leading-[1.6] font-medium">
           Paste any job description and let our AI parse details, Extract skills, and
           generate tailored resume points instantly.
         </p>
 
         {/* CTA Section */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            gap: "16px",
-          }}
-        >
+        <div className="flex flex-wrap justify-center gap-4">
           <Link
             href="/login"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "56px",
-              padding: "0 40px",
-              background: "var(--green)",
-              color: "#FFFFFF",
-              borderRadius: "var(--radius-md)",
-              fontWeight: 700,
-              fontSize: "17px",
-              textDecoration: "none",
-              transition: "all var(--transition-fast)",
-              boxShadow: "0 8px 32px rgba(62, 207, 142, 0.2)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--green-dark)";
-              (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--green)";
-              (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-            }}
+            className="inline-flex items-center justify-center h-14 px-10 bg-[var(--green)] !text-white rounded-md font-bold text-[17px] no-underline transition-all duration-200 ease-out shadow-[0_8px_32px_rgba(62,207,142,0.2)] hover:bg-[var(--green-dark)] hover:!text-white hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 active:shadow-[0_4px_16px_rgba(62,207,142,0.15)]"
           >
             Get Started Free
           </Link>
 
           <Link
             href="/board"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "56px",
-              padding: "0 40px",
-              border: "2px solid var(--border)",
-              color: "var(--text-primary)",
-              borderRadius: "var(--radius-md)",
-              fontWeight: 700,
-              fontSize: "17px",
-              textDecoration: "none",
-              transition: "all var(--transition-fast)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--border-hover)";
-              (e.currentTarget as HTMLElement).style.background = "var(--bg-secondary)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-              (e.currentTarget as HTMLElement).style.background = "transparent";
-            }}
+            className="inline-flex items-center justify-center h-14 px-10 border-2 border-[var(--border)] !text-[var(--text-primary)] rounded-md font-bold text-[17px] no-underline transition-all duration-200 ease-out hover:border-[var(--border-hover)] hover:bg-[var(--bg-secondary)] hover:!text-[var(--text-primary)] hover:-translate-y-1 active:scale-[0.97] active:translate-y-0"
           >
             Live Preview
           </Link>
         </div>
 
         {/* Feature Highlights */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "32px",
-            width: "100%",
-            marginTop: "80px",
-            padding: "40px",
-            borderTop: "1px solid var(--border)",
-          }}
-        >
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-8 w-full mt-20 p-10 border-t border-[var(--border)]">
           {[
             {
               icon: (
@@ -193,31 +80,13 @@ export default function Home() {
           ].map((feature, i) => (
             <div
               key={i}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-              }}
+              className="flex flex-col items-center text-center"
             >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "12px",
-                  background: "var(--green-glass)",
-                  color: "var(--green)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "16px",
-                  border: "1px solid var(--green)",
-                }}
-              >
+              <div className="w-12 h-12 rounded-xl bg-[var(--green-glass)] text-[var(--green)] flex items-center justify-center mb-4 border border-[var(--green)]">
                 {feature.icon}
               </div>
-              <h3 style={{ fontSize: "16px", marginBottom: "8px" }}>{feature.title}</h3>
-              <p style={{ fontSize: "14px", color: "var(--text-tertiary)", margin: 0 }}>
+              <h3 className="text-base font-bold mb-2">{feature.title}</h3>
+              <p className="text-sm text-[var(--text-tertiary)] m-0">
                 {feature.desc}
               </p>
             </div>
@@ -226,18 +95,7 @@ export default function Home() {
       </div>
 
       {/* Bottom Subtle Mesh */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "10%",
-          right: "10%",
-          width: "300px",
-          height: "300px",
-          background: "radial-gradient(circle, rgba(62, 207, 142, 0.1) 0%, transparent 70%)",
-          filter: "blur(60px)",
-          zIndex: 0,
-        }}
-      />
+      <div className="absolute bottom-[10%] right-[10%] w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(62,207,142,0.1)_0%,transparent_70%)] blur-[60px] z-0" />
     </div>
   );
 }

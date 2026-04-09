@@ -10,29 +10,7 @@ export default function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
       title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "36px",
-        height: "36px",
-        borderRadius: "var(--radius-md)",
-        border: "1px solid var(--border)",
-        background: "transparent",
-        color: "var(--text-secondary)",
-        cursor: "pointer",
-        transition: "all var(--transition-fast)",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--green)";
-        e.currentTarget.style.color = "var(--green)";
-        e.currentTarget.style.background = "var(--green-glass)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.color = "var(--text-secondary)";
-        e.currentTarget.style.background = "transparent";
-      }}
+      className="flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--border)] bg-transparent text-[var(--text-secondary)] cursor-pointer transition-all duration-200 ease-out hover:border-[var(--green)] hover:text-[var(--green)] hover:bg-[var(--green-glass)] hover:-translate-y-0.5 hover:shadow-[0_2px_8px_rgba(62,207,142,0.15)] active:scale-95 active:translate-y-0"
     >
       {theme === "light" ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

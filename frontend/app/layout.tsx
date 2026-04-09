@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${raleway.variable} ${raleway.className}`}>
-      <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <body className="min-h-screen flex flex-col">
         <AuthProvider>
           <ThemeProvider>{children}</ThemeProvider>
         </AuthProvider>

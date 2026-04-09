@@ -41,15 +41,15 @@ function VerifyEmailContent() {
   }, [token, router]);
 
   return (
-    <div style={{ textAlign: "center", padding: "40px" }}>
-      <h1 style={{ marginBottom: "16px" }}>
+    <div className="text-center p-10">
+      <h1 className="mb-4 text-2xl font-bold">
         {status === "loading" && "Verifying..."}
         {status === "success" && "Success!"}
         {status === "error" && "Error"}
       </h1>
-      <p style={{ color: status === "error" ? "#EF4444" : "inherit" }}>{message}</p>
+      <p className={status === "error" ? "text-red-500" : "text-inherit"}>{message}</p>
       {status === "success" && (
-        <p style={{ marginTop: "16px", fontSize: "14px", color: "var(--text-tertiary)" }}>
+        <p className="mt-4 text-sm text-[var(--text-tertiary)]">
           Redirecting to login page...
         </p>
       )}
@@ -59,25 +59,8 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "60vh",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "400px",
-          padding: "40px 32px",
-          background: "var(--bg-secondary)",
-          borderRadius: "var(--radius-xl)",
-          border: "1px solid var(--border)",
-          boxShadow: "var(--shadow-lg)",
-        }}
-      >
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-full max-w-[400px] px-8 py-10 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border)] shadow-lg">
         <Suspense fallback={<div>Loading...</div>}>
           <VerifyEmailContent />
         </Suspense>

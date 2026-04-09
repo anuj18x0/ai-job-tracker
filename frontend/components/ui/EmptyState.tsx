@@ -17,53 +17,17 @@ export default function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
-        textAlign: "center",
-      }}
-      className="animate-fade-in-up"
-    >
+    <div className="flex flex-col items-center justify-center py-12 px-6 text-center animate-fade-in-up">
       {icon && (
-        <div
-          style={{
-            width: "56px",
-            height: "56px",
-            borderRadius: "var(--radius-lg)",
-            background: "var(--green-glass)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: "16px",
-            color: "var(--green)",
-          }}
-        >
+        <div className="w-14 h-14 rounded-2xl bg-[var(--green-glass)] flex items-center justify-center mb-4 text-[var(--green)]">
           {icon}
         </div>
       )}
-      <h3
-        style={{
-          margin: "0 0 6px",
-          fontSize: "16px",
-          fontWeight: 700,
-          color: "var(--text-primary)",
-        }}
-      >
+      <h3 className="m-0 mb-1.5 text-base font-bold text-[var(--text-primary)]">
         {title}
       </h3>
       {description && (
-        <p
-          style={{
-            margin: "0 0 20px",
-            fontSize: "14px",
-            color: "var(--text-tertiary)",
-            maxWidth: "320px",
-          }}
-        >
+        <p className="m-0 mb-5 text-sm text-[var(--text-tertiary)] max-w-xs block">
           {description}
         </p>
       )}

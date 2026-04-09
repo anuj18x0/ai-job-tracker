@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { cn } from "@/lib/utils";
 
 interface CopyButtonProps {
   text: string;
@@ -33,32 +34,12 @@ export default function CopyButton({ text, size = 16 }: CopyButtonProps) {
       onClick={handleCopy}
       aria-label={copied ? "Copied!" : "Copy to clipboard"}
       title={copied ? "Copied!" : "Copy to clipboard"}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "30px",
-        height: "30px",
-        borderRadius: "var(--radius-sm)",
-        border: "none",
-        background: copied ? "var(--green-glass)" : "transparent",
-        color: copied ? "var(--green)" : "var(--text-tertiary)",
-        cursor: "pointer",
-        transition: "all var(--transition-fast)",
-        flexShrink: 0,
-      }}
-      onMouseEnter={(e) => {
-        if (!copied) {
-          e.currentTarget.style.background = "var(--bg-tertiary)";
-          e.currentTarget.style.color = "var(--text-primary)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!copied) {
-          e.currentTarget.style.background = "transparent";
-          e.currentTarget.style.color = "var(--text-tertiary)";
-        }
-      }}
+      className={cn(
+        "inline-flex items-center justify-center w-[30px] h-[30px] rounded-md border-none shrink-0 cursor-pointer transition-all duration-200 ease-out active:scale-90",
+        copied
+          ? "bg-[var(--green-glass)] text-[var(--green)]"
+          : "bg-transparent text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] hover:scale-110"
+      )}
     >
       {copied ? (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

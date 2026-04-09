@@ -1,10 +1,13 @@
+import { cn } from "@/lib/utils";
+
 interface SpinnerProps {
   size?: "sm" | "md" | "lg";
+  className?: string;
 }
 
 const sizes = { sm: 16, md: 24, lg: 36 };
 
-export default function Spinner({ size = "md" }: SpinnerProps) {
+export default function Spinner({ size = "md", className }: SpinnerProps) {
   const s = sizes[size];
   return (
     <svg
@@ -12,7 +15,7 @@ export default function Spinner({ size = "md" }: SpinnerProps) {
       height={s}
       viewBox="0 0 24 24"
       fill="none"
-      style={{ animation: "spin 0.8s linear infinite" }}
+      className={cn("animate-spin", className)}
       aria-label="Loading"
     >
       <circle

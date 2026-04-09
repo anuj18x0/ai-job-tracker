@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useEffect } from "react";
 import CopyButton from "@/components/ui/CopyButton";
-import Spinner from "@/components/ui/Spinner";
 import type { ResumeSuggestion } from "@/types";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -64,11 +63,16 @@ export default function AISuggestions({
 
   if (isLoading && !isStreaming) {
     return (
-      <div className="flex items-center gap-2 py-3">
-        <Spinner size="sm" />
-        <span className="text-xs text-muted-foreground/60">
-          Analyzing job requirements...
-        </span>
+      <div className="flex flex-col gap-3 py-3">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
+          <span className="text-xs font-medium text-[var(--green)]">
+            Analyzing job requirements...
+          </span>
+        </div>
+        <div className="w-full h-3 bg-[var(--bg-tertiary)] rounded-md animate-pulse" style={{ animationDelay: "0ms" }} />
+        <div className="w-5/6 h-3 bg-[var(--bg-tertiary)] rounded-md animate-pulse" style={{ animationDelay: "150ms" }} />
+        <div className="w-11/12 h-3 bg-[var(--bg-tertiary)] rounded-md animate-pulse" style={{ animationDelay: "300ms" }} />
       </div>
     );
   }

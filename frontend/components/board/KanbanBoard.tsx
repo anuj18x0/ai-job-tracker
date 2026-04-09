@@ -7,7 +7,7 @@ import JobCard from "./JobCard";
 import AddApplicationModal from "./AddApplicationModal";
 import JobDetailModal from "./JobDetailModal";
 import EmptyState from "@/components/ui/EmptyState";
-import Spinner from "@/components/ui/Spinner";
+import { SkeletonBoard } from "@/components/ui/Skeleton";
 import { useBoard } from "@/context/BoardContext";
 import type { JobApplication, ApplicationStatus, ApplicationFormData } from "@/types";
 import { KANBAN_COLUMNS } from "@/lib/constants";
@@ -159,11 +159,7 @@ export default function KanbanBoard() {
   }, [applications, searchQuery, filterStatus]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh] w-full">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <SkeletonBoard />;
   }
 
   const isEmpty = applications.length === 0;

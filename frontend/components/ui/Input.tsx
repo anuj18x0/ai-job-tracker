@@ -1,6 +1,7 @@
 "use client";
 
-import { type InputHTMLAttributes, type TextareaHTMLAttributes, forwardRef } from "react";
+import { type InputHTMLAttributes, type TextareaHTMLAttributes, forwardRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface BaseInputProps {
   label?: string;
@@ -11,72 +12,41 @@ interface BaseInputProps {
 type InputProps = BaseInputProps & InputHTMLAttributes<HTMLInputElement>;
 type TextareaProps = BaseInputProps & TextareaHTMLAttributes<HTMLTextAreaElement> & { multiline: true };
 
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "13px",
-  fontWeight: 600,
-  color: "var(--text-secondary)",
-  marginBottom: "6px",
-  letterSpacing: "0.02em",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 14px",
-  fontSize: "14px",
-  fontFamily: "inherit",
-  color: "var(--text-primary)",
-  background: "var(--input-bg)",
-  border: "1px solid var(--input-border)",
-  borderRadius: "var(--radius-md)",
-  outline: "none",
-  transition: "border-color var(--transition-fast), box-shadow var(--transition-fast)",
-};
-
-const errorMsgStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#EF4444",
-  marginTop: "4px",
-};
-
-const helperStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "var(--text-tertiary)",
-  marginTop: "4px",
-};
-
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, id, style, ...props }, ref) => {
+  ({ label, error, helperText, id, className, ...props }, ref) => {
     const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
+    const [focused, setFocused] = useState(false);
     return (
-      <div style={{ marginBottom: "16px" }}>
+      <div className="mb-4">
         {label && (
-          <label htmlFor={inputId} style={labelStyle}>
+          <label htmlFor={inputId} className="block text-[13px] font-semibold text-[var(--text-secondary)] mb-1.5 tracking-[0.02em]">
             {label}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
-          style={{
-            ...inputStyle,
-            ...(error ? { borderColor: "#EF4444" } : {}),
-            ...style,
-          }}
+          className={cn(
+            "w-full px-3.5 py-2.5 text-sm font-inherit text-[var(--text-primary)] bg-[var(--input-bg)] border rounded-md outline-none transition-all duration-150",
+            error 
+              ? "border-[#EF4444]" 
+              : focused 
+                ? "border-[var(--green)] ring-2 ring-[var(--green-glass)]" 
+                : "border-[var(--input-border)]",
+            className
+          )}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = error ? "#EF4444" : "var(--border-focus)";
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${error ? "rgba(239,68,68,0.1)" : "rgba(62,207,142,0.1)"}`;
+            setFocused(true);
             props.onFocus?.(e);
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = error ? "#EF4444" : "var(--input-border)";
-            e.currentTarget.style.boxShadow = "none";
+            setFocused(false);
             props.onBlur?.(e);
           }}
           {...props}
         />
-        {error && <p style={errorMsgStyle}>{error}</p>}
-        {helperText && !error && <p style={helperStyle}>{helperText}</p>}
+        {error && <p className="text-xs text-[#EF4444] mt-1">{error}</p>}
+        {helperText && !error && <p className="text-xs text-[var(--text-tertiary)] mt-1">{helperText}</p>}
       </div>
     );
   }
@@ -85,38 +55,40 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = "Input";
 
 export const Textarea = forwardRef<HTMLTextAreaElement, Omit<TextareaProps, "multiline">>(
-  ({ label, error, helperText, id, style, ...props }, ref) => {
+  ({ label, error, helperText, id, className, ...props }, ref) => {
     const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
+    const [focused, setFocused] = useState(false);
     return (
-      <div style={{ marginBottom: "16px" }}>
+      <div className="mb-4">
         {label && (
-          <label htmlFor={inputId} style={labelStyle}>
+          <label htmlFor={inputId} className="block text-[13px] font-semibold text-[var(--text-secondary)] mb-1.5 tracking-[0.02em]">
             {label}
           </label>
         )}
         <textarea
           ref={ref}
           id={inputId}
-          style={{
-            ...inputStyle,
-            minHeight: "120px",
-            resize: "vertical",
-            lineHeight: "1.5",
-            ...(error ? { borderColor: "#EF4444" } : {}),
-            ...style,
-          }}
+          className={cn(
+            "w-full px-3.5 py-2.5 text-sm font-inherit text-[var(--text-primary)] bg-[var(--input-bg)] border rounded-md outline-none transition-all duration-150 min-h-[120px] resize-y leading-[1.6]",
+            error 
+              ? "border-[#EF4444]" 
+              : focused 
+                ? "border-[var(--green)] ring-2 ring-[var(--green-glass)]" 
+                : "border-[var(--input-border)]",
+            className
+          )}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = error ? "#EF4444" : "var(--border-focus)";
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${error ? "rgba(239,68,68,0.1)" : "rgba(62,207,142,0.1)"}`;
+            setFocused(true);
+            props.onFocus?.(e);
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = error ? "#EF4444" : "var(--input-border)";
-            e.currentTarget.style.boxShadow = "none";
+            setFocused(false);
+            props.onBlur?.(e);
           }}
           {...props}
         />
-        {error && <p style={errorMsgStyle}>{error}</p>}
-        {helperText && !error && <p style={helperStyle}>{helperText}</p>}
+        {error && <p className="text-xs text-[#EF4444] mt-1">{error}</p>}
+        {helperText && !error && <p className="text-xs text-[var(--text-tertiary)] mt-1">{helperText}</p>}
       </div>
     );
   }

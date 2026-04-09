@@ -1,6 +1,7 @@
 "use client";
 
 import { type ButtonHTMLAttributes, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "danger";
@@ -18,53 +19,49 @@ export default function Button({
   className = "",
   ...props
 }: ButtonProps) {
-  const baseStyles: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-    fontFamily: "inherit",
-    fontWeight: 600,
-    borderRadius: "var(--radius-md)",
-    border: "none",
-    cursor: disabled || isLoading ? "not-allowed" : "pointer",
-    transition: "all var(--transition-fast)",
-    opacity: disabled || isLoading ? 0.6 : 1,
-    whiteSpace: "nowrap",
-    letterSpacing: "0.01em",
+  const isDisabled = disabled || isLoading;
+
+  const base =
+    "relative inline-flex items-center justify-center gap-2 font-semibold rounded-lg border-none cursor-pointer whitespace-nowrap tracking-[0.01em] " +
+    "transition-all duration-200 ease-out " +
+    "active:scale-[0.97] " +
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]";
+
+  const variants: Record<string, string> = {
+    primary:
+      "bg-[var(--green)] text-white shadow-[0_2px_8px_rgba(62,207,142,0.25)] " +
+      "hover:bg-[var(--green-dark)] hover:shadow-[0_4px_16px_rgba(62,207,142,0.35)] hover:-translate-y-0.5 " +
+      "active:shadow-[0_1px_4px_rgba(62,207,142,0.2)] active:translate-y-0",
+    secondary:
+      "bg-transparent text-[var(--text-primary)] border border-[var(--border)] " +
+      "hover:border-[var(--border-hover)] hover:bg-[var(--bg-secondary)] hover:-translate-y-0.5 " +
+      "active:bg-[var(--bg-tertiary)]",
+    ghost:
+      "bg-transparent text-[var(--text-secondary)] " +
+      "hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] " +
+      "active:bg-[var(--border)]",
+    danger:
+      "bg-red-500 text-white shadow-[0_2px_8px_rgba(239,68,68,0.25)] " +
+      "hover:bg-red-600 hover:shadow-[0_4px_16px_rgba(239,68,68,0.35)] hover:-translate-y-0.5 " +
+      "active:bg-red-700 active:shadow-[0_1px_4px_rgba(239,68,68,0.2)] active:translate-y-0",
   };
 
-  const variantStyles: Record<string, React.CSSProperties> = {
-    primary: {
-      background: "var(--green)",
-      color: "#FFFFFF",
-    },
-    secondary: {
-      background: "transparent",
-      color: "var(--text-primary)",
-      border: "1px solid var(--border)",
-    },
-    ghost: {
-      background: "transparent",
-      color: "var(--text-secondary)",
-    },
-    danger: {
-      background: "#EF4444",
-      color: "#FFFFFF",
-    },
-  };
-
-  const sizeStyles: Record<string, React.CSSProperties> = {
-    sm: { padding: "6px 12px", fontSize: "13px", height: "32px" },
-    md: { padding: "8px 16px", fontSize: "14px", height: "38px" },
-    lg: { padding: "10px 24px", fontSize: "15px", height: "44px" },
+  const sizes: Record<string, string> = {
+    sm: "px-3 py-1.5 text-[13px] h-8",
+    md: "px-4 py-2 text-sm h-[38px]",
+    lg: "px-6 py-2.5 text-[15px] h-11",
   };
 
   return (
     <button
-      style={{ ...baseStyles, ...variantStyles[variant], ...sizeStyles[size] }}
-      disabled={disabled || isLoading}
-      className={`btn btn-${variant} ${className}`}
+      disabled={isDisabled}
+      className={cn(
+        base,
+        variants[variant],
+        sizes[size],
+        isDisabled && "opacity-60 cursor-not-allowed pointer-events-none",
+        className
+      )}
       {...props}
     >
       {isLoading && (
@@ -73,7 +70,7 @@ export default function Button({
           height="16"
           viewBox="0 0 16 16"
           fill="none"
-          style={{ animation: "spin 1s linear infinite" }}
+          className="animate-spin"
         >
           <circle
             cx="8"

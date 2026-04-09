@@ -67,7 +67,7 @@ export default function KanbanColumn({
         
         <button
           onClick={() => openAddModal(id)}
-          className="p-1 rounded-md text-muted-foreground/30 hover:text-muted-foreground hover:bg-secondary/50 transition-all"
+          className="p-1 rounded-md text-muted-foreground/30 hover:text-muted-foreground hover:bg-secondary/50 transition-all duration-200 hover:scale-110 active:scale-90"
           title={`Add to ${title}`}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -82,7 +82,7 @@ export default function KanbanColumn({
         {count === 0 && (
           <button
             onClick={() => openAddModal(id)}
-            className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-border/30 opacity-40 hover:opacity-100 hover:border-green/30 hover:bg-green/[0.02] transition-all group"
+            className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-border/30 opacity-40 hover:opacity-100 hover:border-green/30 hover:bg-green/[0.02] transition-all duration-200 active:scale-95 group"
           >
             <Plus className="w-4 h-4 text-muted-foreground/40 group-hover:text-green transition-colors mb-1" />
             <span className="text-[11px] font-medium text-muted-foreground/40 group-hover:text-green/70 transition-colors">

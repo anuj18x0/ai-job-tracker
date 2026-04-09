@@ -235,14 +235,14 @@ export default function JobDetailModal({
       ) : (
         <button
           onClick={() => setShowDeleteConfirm(true)}
-          className="text-xs text-muted-foreground/30 hover:text-red-400 transition-colors"
+          className="text-xs text-muted-foreground/30 hover:text-red-400 transition-all duration-200 hover:scale-105 active:scale-95"
         >
           Delete
         </button>
       )}
       <button
         onClick={handleEdit}
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105 active:scale-95"
       >
         <Pencil className="w-3.5 h-3.5" />
         Edit
@@ -252,13 +252,13 @@ export default function JobDetailModal({
     <div className="flex items-center justify-end gap-3 w-full">
       <button
         onClick={() => setIsEditing(false)}
-        className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-all duration-200 hover:bg-secondary/50 active:scale-95"
       >
         Cancel
       </button>
       <button
         onClick={handleSave}
-        className="px-4 py-2 rounded-lg text-sm font-medium bg-green text-white hover:bg-green/90 transition-colors"
+        className="px-4 py-2 rounded-lg text-sm font-medium bg-green text-white hover:bg-green/90 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 shadow-sm hover:shadow-md"
       >
         Save
       </button>
@@ -362,7 +362,7 @@ export default function JobDetailModal({
                 href={data.jdLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/40 hover:text-green transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/40 hover:text-green transition-all duration-200 hover:translate-x-1"
               >
                 <ExternalLink className="w-3 h-3" />
                 View original posting
@@ -417,7 +417,7 @@ export default function JobDetailModal({
                         <div className="py-4">
                           <button
                             onClick={handleGenerateSuggestions}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-green/10 text-green hover:bg-green/15 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-green/10 text-green hover:bg-green/15 transition-all duration-200 hover:scale-[1.02] active:scale-95"
                           >
                             <Sparkles className="w-3.5 h-3.5" />
                             Generate Suggestions
@@ -453,8 +453,8 @@ export default function JobDetailModal({
                 value={editData.location || ""}
                 onChange={(e) => setEditData({ ...editData, location: e.target.value })}
               />
-              <div className="flex flex-col gap-1.5" style={{ marginBottom: "16px" }}>
-                <label className="text-[13px] font-semibold" style={{ color: "var(--text-secondary)", letterSpacing: "0.02em" }}>Status</label>
+              <div className="flex flex-col gap-1.5 mb-4">
+                <label className="text-[13px] font-semibold text-[var(--text-secondary)] tracking-[0.02em]">Status</label>
                 <select
                   value={editData.status}
                   onChange={(e) => setEditData({ ...editData, status: e.target.value as ApplicationStatus })}

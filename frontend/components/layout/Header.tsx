@@ -79,7 +79,7 @@ export default function Header() {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setIsResumeOpen(true)}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
             >
               <FileText className="w-3.5 h-3.5" />
               <span>Resume</span>
@@ -101,10 +101,10 @@ export default function Header() {
 
             <Link
               href="/profile"
-              className="w-8 h-8 rounded-full bg-secondary/50 hover:bg-secondary transition-all flex items-center justify-center"
+              className="w-8 h-8 rounded-full bg-secondary/50 hover:bg-secondary transition-all duration-200 flex items-center justify-center active:scale-95 hover:-translate-y-0.5"
               aria-label="Profile"
             >
-              <User className="w-4 h-4 text-muted-foreground" />
+              <User className="w-4 h-4 text-muted-foreground transition-colors group-hover:text-foreground" />
             </Link>
           </div>
         </div>
