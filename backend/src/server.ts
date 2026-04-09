@@ -52,6 +52,9 @@ connectDB();
 
 const app = express();
 
+// Trust proxy for Railway/Vercel (fixes X-Forwarded-For rate limit errors)
+app.set("trust proxy", 1);
+
 // Body parser with size limit
 app.use(express.json({ limit: '1mb' }));
 
