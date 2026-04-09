@@ -8,102 +8,140 @@ JobTracker is a premium SaaS interface designed to streamline the job applicatio
 
 ```mermaid
 graph TD
-    subgraph Frontend [Next.js Client]
+    subgraph Frontend [Vercel - Next.js Client]
         UI[Kanban Board / Detail Modal]
         SSE[SSE Client Streaming]
-        Store[Context / React Query]
+        Store[React Query / Context]
+        Proxy[Next.js API Rewrite Proxy]
     end
 
-    subgraph Backend [Node.js / Express]
+    subgraph Backend [Railway - Node.js Express]
         API[REST & SSE Endpoints]
-        parser[JD Parser Service]
-        suggester[Resume Suggester Service]
+        Auth[JWT / Cookie Auth]
+        parser[Gemini JD Parser]
+        suggester[Gemini Resume Suggester]
     end
 
     subgraph AI [Google Gemini AI]
-        JSON[Gemini 1.5 Flash - JSON Mode]
+        JSON[Gemini 1.5 Flash - Structured Mode]
         Stream[Gemini 1.5 Flash - Token Stream]
     end
 
-    subgraph Data [MongoDB]
-        Jobs[Job Applications]
-        Users[User Auth & Resumes]
+    subgraph Data [Cloud Infrastructure]
+        Mongo[MongoDB Atlas]
+        Redis[Upstash Redis - Session/Limit]
+        S3[AWS S3 - Resume Storage]
+        Resend[Resend - Transactional Email]
     end
 
     %% Flow
-    UI -->|Paste JD| API
+    UI --> Proxy
+    Proxy -->|Silent Rewrite| API
     API -->|Prompt| JSON
-    JSON -->|Structured Data| API
+    JSON -->|Structured JSON| API
     API -->|Save & Return| UI
 
-    UI -->|Analyze & Generate| API
-    API -->|Resume Context + JD| Stream
+    UI -->|Generate Suggestions| API
+    API -->|Resume + JD Context| Stream
     Stream -->|SSE Chunks| API
-    API -->|Streaming JSON| SSE
-    SSE -->|Typewriter Effect| UI
+    API -->|Streaming Data| UI
+    UI -->|Typewriter Effect| UI
 ```
 
 ---
 
 ## ✨ Key Features
 
-- **🧠 Intelligent JD Parsing**: Paste any job description; the AI instantly extracts Company, Role, Skills (Required vs. Nice-to-Have), Location, and Seniority.
-- **⚡ Real-time Resume Optimization**: Character-by-character AI streaming that generates tailored bullet points based on **your specific resume** and the job requirements.
+- **🧠 Intelligent JD Parsing**: Paste any job description; the AI instantly extracts Company, Role, Skills (Required vs. Nice-to-Have), Location, and Seniority with validation against non-job text.
+- **⚡ Real-time Resume Optimization**: Character-by-character AI streaming that generates tailored bullet points based on your uploaded resume and the specific job requirements.
 - **📋 Premium Kanban Board**: A sleek, Linear-inspired board to track applications through every stage (Applied, Phone Screen, Interview, Offer, Rejected).
-- **⏰ Overdue Alerts**: Subtle pulsing red indicators for applications requiring a follow-up.
+- **📱 Native Mobile Experience**: Custom horizontal scroll-snapping logic for Kanban columns, providing a native app feel on mobile devices.
+- **🔒 Secure Authentication**: Robust JWT-based auth with cookie-based session management, featuring cross-domain sameSite policies.
+- **📧 Automated Notifications**: Transactional emails for registration and account verification powered by Resend.
 - **📥 Data Portability**: Instant CSV export of your entire application board.
-- **🧩 Modern UI/UX**: Glassmorphic design, smooth Framer Motion transitions, and advanced typewriter effects for AI responses.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Framer Motion, Lucide Icons.
-- **Backend**: Node.js, Express, Mongoose, JWT Auth.
-- **AI**: Gemini 1.5 Flash (Google Generative AI).
-- **Database**: MongoDB (Atlas/Local).
+### Frontend
+- **Framework**: Next.js 16 (App Router)
+- **State Management**: Tanstack Query (React Query) & React Context
+- **Styling**: Tailwind CSS v4
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+
+### Backend
+- **Server**: Node.js & Express
+- **Database**: MongoDB (Mongoose)
+- **Caching/Rate Limiting**: Upstash Redis
+- **Cloud Storage**: AWS S3
+- **Email**: Resend API
+- **AI**: Google Generative AI (Gemini 1.5 Flash)
 
 ---
 
-## ⚙️ Development Setup
+## ⚙️ Environment Variables
 
-### 1. Prerequisites
+### Backend (`/backend/.env`)
+| Variable | Description |
+|----------|-------------|
+| `PORT` | Port number (default 5000) |
+| `MONGO_URI` | MongoDB Connection String |
+| `JWT_SECRET` | Secret key for JWT signing |
+| `JWT_EXPIRE` | Token expiry (e.g., 1d) |
+| `GEMINI_API_KEY` | Google AI Studio Key |
+| `RESEND_API_KEY` | Resend.com API Key |
+| `MAIL_FROM` | Verified sender email for Resend |
+| `AWS_ACCESS_KEY_ID` | AWS Credentials for S3 |
+| `AWS_SECRET_ACCESS_KEY` | AWS Credentials for S3 |
+| `AWS_REGION` | S3 Bucket Region |
+| `S3_BUCKET_NAME` | S3 Bucket Name |
+| `FRONTEND_URL` | URL of the frontend (for CORS) |
 
-- Node.js (v18+)
-- MongoDB (Running locally or Atlas URI)
-- Google AI (Gemini) API Key
+### Frontend (`/frontend/.env`)
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_BACKEND_URL` | For local dev only (http://localhost:5000) |
+| `BACKEND_URL` | Required for Vercel Rewrites (Railway link) |
 
-### 2. Backend Setup
+---
 
+## 🚀 Installation & Setup
+
+### 1. Backend Setup
 ```bash
 cd backend
 npm install
-# Create .env with:
-# PORT=5000
-# MONGO_URI=your_mongodb_uri
-# JWT_SECRET=your_secret
-# GEMINI_API_KEY=your_key
+# Configure .env
 npm run dev
 ```
 
-### 3. Frontend Setup
-
+### 2. Frontend Setup
 ```bash
 cd frontend
 npm install
-# Create .env with:
-# NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
+# Configure .env
 npm run dev
 ```
 
 ---
 
-## 🌑 Dark Mode & Design System
+## 🧠 Key Decisions & Optimization
 
-The app uses a curated high-contrast dark theme by default, featuring `backdrop-blur-xl` surfaces, `3xl` border radius, and premium typography. It supports toggleable themes via the `ThemeToggle` component.
+### 1. Cross-Domain Cookie Proxying
+Due to strict third-party cookie policies in modern browsers, we implemented **Next.js API Rewrites**. This allows the Vercel frontend to act as a proxy, making the browser believe the Railway backend is on the same domain, ensuring `httpOnly` cookies work seamlessly across domains.
+
+### 2. Mobile Swipe-To-Scroll
+Instead of stacking Kanban columns vertically (which breaks the drag-and-drop mental model), we implemented **CSS Scroll Snapping**. Columns lock to a fixed width on mobile, allowing users to "swipe" between stages with a native-app feel.
+
+### 3. AI Validation & Security
+Implemented double-layer validation. The Gemini AI prompt is engineered to detect non-job-related text (like recipes or lyrics). If detected, the backend rejects the entry before saving, preventing database pollution.
+
+### 4. Direct Resend Integration
+Switched from traditional SMTP (Nodemailer) to **Resend's Native SDK** to bypass common cloud-provider port blocks (like Port 25/587) and ensure 100% email deliverability for account verification.
 
 ---
 
 ## 📝 License
-
-MIT License - Created for High-Performance Recruitment Tracking.
+MIT License - Developed by Arth Arvind.
