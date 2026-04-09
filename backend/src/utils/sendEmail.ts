@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 interface EmailOptions {
   email: string;
@@ -7,25 +7,28 @@ interface EmailOptions {
 }
 
 const sendEmail = async (options: EmailOptions) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
 
-  const message = {
-    from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
-    to: options.email,
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+  if (RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not defined in the environment variables');
+  }
+
+  const resend = new Resend(RESEND_API_KEY);
+
+  const { data, error } = await resend.emails.send({
+    from: `${process.env.MAIL_FROM}>`,
+    to: [options.email],
     subject: options.subject,
     text: options.message,
-  };
+  });
 
-  const info = await transporter.sendMail(message);
+  if (error) {
+    console.error('Resend API Error:', error);
+    throw new Error(`Email sending failed: ${error.message}`);
+  }
 
-  console.log('Message sent: %s', info.messageId);
+  console.log('Message sent successfully via Resend API. ID: %s', data?.id);
 };
 
 export default sendEmail;
