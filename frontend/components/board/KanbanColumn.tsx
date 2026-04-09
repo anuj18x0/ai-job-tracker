@@ -48,7 +48,7 @@ export default function KanbanColumn({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="flex flex-col flex-1 min-w-[220px] rounded-xl transition-all duration-200 h-full max-h-[calc(100vh-140px)]"
+      className="snap-center flex flex-col w-[280px] shrink-0 rounded-xl transition-all duration-200 h-full max-h-[calc(100vh-140px)]"
     >
       {/* Column Header */}
       <div className="flex items-center justify-between px-2 py-3">

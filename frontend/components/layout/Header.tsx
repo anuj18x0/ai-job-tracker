@@ -82,10 +82,10 @@ export default function Header() {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setIsResumeOpen(true)}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Resume</span>
+              <span className="hidden lg:inline">Resume</span>
             </button>
 
             <Button

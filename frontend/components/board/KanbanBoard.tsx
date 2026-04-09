@@ -184,8 +184,8 @@ export default function KanbanBoard() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-x-auto no-scrollbar">
-            <div className="flex h-full w-full px-4 py-2 gap-3">
+          <div className="flex-1 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+            <div className="flex h-full w-max px-4 py-2 gap-4">
               {KANBAN_COLUMNS.map((col) => {
                 const columnApps = filteredApplications.filter((a) => a.status === col.id);
                 return (
