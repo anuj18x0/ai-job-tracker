@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import KanbanColumn from "./KanbanColumn";
 import JobCard from "./JobCard";
@@ -14,12 +14,12 @@ import { KANBAN_COLUMNS } from "@/lib/constants";
 import { getJobApplications, updateApplication, createApplication, deleteApplication } from "@/lib/api-client";
 import { Plus, LayoutGrid, Download } from "lucide-react";
 import DashboardStats from "@/components/dashboard/DashboardStats";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function KanbanBoard() {
-  const [applications, setApplications] = useState<JobApplication[]>([]);
   const [selectedApp, setSelectedApp] = useState<JobApplication | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const { 
     searchQuery, 
@@ -30,86 +30,81 @@ export default function KanbanBoard() {
     openAddModal 
   } = useBoard();
 
-  const fetchApplications = useCallback(async () => {
-    try {
-      setIsLoading(true);
+  const { data: applications = [], isLoading } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: async () => {
       const result = await getJobApplications();
-      if (result.success) {
-        setApplications(result.jobs);
-      }
-    } catch (err) {
-      console.error("Failed to fetch applications", err);
-    } finally {
-      setIsLoading(false);
+      if (!result.success) throw new Error("Failed to fetch applications");
+      return result.jobs as JobApplication[];
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    fetchApplications();
-  }, [fetchApplications]);
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: Partial<JobApplication> }) => {
+      const result = await updateApplication(id, data);
+      if (!result.success) throw new Error(result.message);
+      return result.job as JobApplication;
+    },
+    onSuccess: (updatedJob) => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      if (selectedApp && updatedJob._id === selectedApp._id) {
+        setSelectedApp(updatedJob);
+      }
+    }
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: ApplicationFormData) => {
+      const result = await createApplication(data);
+      if (!result.success) throw new Error(result.message || "Failed to create application");
+      return result.job;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      setIsAddModalOpen(false);
+    },
+    onError: (error) => {
+      alert(error.message);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const result = await deleteApplication(id);
+      if (!result.success) throw new Error("Failed to delete application");
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      setIsDetailOpen(false);
+      setSelectedApp(null);
+    }
+  });
 
   const handleDrop = useCallback(
-    async (applicationId: string, newStatus: ApplicationStatus) => {
-      const originalApps = [...applications];
-      setApplications((prev) =>
-        prev.map((app) =>
-          app._id === applicationId ? { ...app, status: newStatus } : app
-        )
-      );
-
-      try {
-        const result = await updateApplication(applicationId, { status: newStatus });
-        if (!result.success) {
-          throw new Error(result.message);
-        }
-      } catch (err) {
-        console.error("Failed to update app status", err);
-        setApplications(originalApps);
-      }
+    (applicationId: string, newStatus: ApplicationStatus) => {
+      // Optimistic cache update for instant UI feedback
+      queryClient.setQueryData(['jobs'], (old: JobApplication[] | undefined) => {
+        if (!old) return old;
+        return old.map(app => app._id === applicationId ? { ...app, status: newStatus } : app);
+      });
+      // Fire mutation in background
+      updateMutation.mutate({ id: applicationId, data: { status: newStatus } });
     },
-    [applications]
+    [queryClient, updateMutation]
   );
 
-  const handleAddApplication = useCallback(async (data: ApplicationFormData) => {
-    try {
-      const result = await createApplication(data);
-      if (result.success) {
-        setApplications((prev) => [result.job, ...prev]);
-        setIsAddModalOpen(false);
-      } else {
-        alert(result.message || "Failed to create application");
-      }
-    } catch (err) {
-      console.error("Failed to create application", err);
-    }
-  }, [setIsAddModalOpen]);
+  const handleAddApplication = async (data: ApplicationFormData) => {
+    createMutation.mutate(data);
+  };
 
-  const handleSaveApplication = useCallback(async (updated: JobApplication) => {
-    try {
-      const result = await updateApplication(updated._id, updated);
-      if (result.success) {
-        setApplications((prev) =>
-          prev.map((app) => (app._id === result.job._id ? result.job : app))
-        );
-        setSelectedApp(result.job);
-      }
-    } catch (err) {
-      console.error("Failed to save application", err);
-    }
-  }, []);
+  const handleSaveApplication = async (updated: JobApplication) => {
+    updateMutation.mutate({ id: updated._id, data: updated });
+  };
 
-  const handleDeleteApplication = useCallback(async (id: string) => {
-    try {
-      const result = await deleteApplication(id);
-      if (result.success) {
-        setApplications((prev) => prev.filter((app) => app._id !== id));
-        setIsDetailOpen(false);
-        setSelectedApp(null);
-      }
-    } catch (err) {
-      console.error("Failed to delete application", err);
-    }
-  }, []);
+  const handleDeleteApplication = async (id: string) => {
+    deleteMutation.mutate(id);
+  };
 
   const handleExportCSV = useCallback(() => {
     if (applications.length === 0) return;
@@ -203,7 +198,7 @@ export default function KanbanBoard() {
                   >
                     <AnimatePresence mode="popLayout" initial={false}>
                       {columnApps.map((app) => (
-                        <motion.div
+                         <motion.div
                           key={app._id}
                           layout
                           initial={{ opacity: 0, y: 10 }}

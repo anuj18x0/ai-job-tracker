@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import { uploadResume, getResumeStatus } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ResumeModalProps {
   isOpen: boolean;
@@ -14,24 +15,36 @@ interface ResumeModalProps {
 
 export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [status, setStatus] = useState<{ hasResume: boolean; lastUpdated?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchStatus = async () => {
-    try {
+  const { data: status } = useQuery({
+    queryKey: ['resume-status'],
+    queryFn: async () => {
       const res = await getResumeStatus();
-      if (res.success) {
-        setStatus({ hasResume: res.hasResume, lastUpdated: res.lastUpdated });
-      }
-    } catch (err) {
-      console.error("Failed to fetch resume status", err);
+      if (!res.success) return null;
+      return { hasResume: res.hasResume, lastUpdated: res.lastUpdated };
+    },
+    enabled: isOpen,
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async (uploadFile: File) => {
+      const res = await uploadResume(uploadFile);
+      if (!res.success) throw new Error(res.message || "Failed to upload resume.");
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['resume-status'] });
+      setFile(null);
+    },
+    onError: (err: Error) => {
+      setError(err.message || "An unexpected error occurred.");
     }
-  };
+  });
 
   useEffect(() => {
     if (isOpen) {
-      fetchStatus();
       setError(null);
       setFile(null);
     }
@@ -60,27 +73,13 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
     setError(null);
   };
 
-  const handleUpload = async () => {
+  const handleUpload = () => {
     if (!file) return;
-
-    setIsUploading(true);
     setError(null);
-
-    try {
-      const res = await uploadResume(file);
-      if (res.success) {
-        await fetchStatus();
-        setFile(null);
-      } else {
-        setError(res.message || "Failed to upload resume.");
-      }
-    } catch (err) {
-      setError("An unexpected error occurred.");
-      console.error(err);
-    } finally {
-      setIsUploading(false);
-    }
+    uploadMutation.mutate(file);
   };
+
+  const isUploading = uploadMutation.isPending;
 
   return (
     <Modal

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { login as apiLogin, register as apiRegister, getMe, logout as apiLogout } from '@/lib/api-client';
 
 interface User {
@@ -22,72 +23,67 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const checkAuth = async () => {
-    try {
+  const { data: user, isLoading: isAuthLoading, refetch: checkAuthQuery } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
       const data = await getMe();
-      if (data.success) {
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!data.success) return null;
+      return data.user as User;
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000, 
+  });
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const loginMutation = useMutation({
+    mutationFn: async ({ email, password }: any) => {
+      const data = await apiLogin(email, password);
+      if (!data.success) throw new Error(data.message || 'Login failed');
+      return data.user;
+    },
+    onSuccess: (userData) => {
+      queryClient.setQueryData(['user'], userData);
+    }
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async ({ name, email, password }: any) => {
+      const data = await apiRegister(name, email, password);
+      if (!data.success) throw new Error(data.message || 'Registration failed');
+      return data;
+    }
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: apiLogout,
+    onSuccess: () => {
+      queryClient.setQueryData(['user'], null);
+      queryClient.clear(); 
+      window.location.href = "/login"; 
+    }
+  });
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      const data = await apiLogin(email, password);
-      if (data.success) {
-        setUser(data.user);
-      } else {
-        throw new Error(data.message || 'Login failed');
-      }
-    } catch (err: any) {
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    await loginMutation.mutateAsync({ email, password });
   };
-
+  
   const register = async (name: string, email: string, password: string) => {
-    setLoading(true);
-    try {
-      const data = await apiRegister(name, email, password);
-      if (!data.success) {
-        throw new Error(data.message || 'Registration failed');
-      }
-    } catch (err: any) {
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    await registerMutation.mutateAsync({ name, email, password });
+  };
+  
+  const logout = async () => {
+    await logoutMutation.mutateAsync();
   };
 
-  const logout = async () => {
-    setLoading(true);
-    try {
-      await apiLogout();
-      setUser(null);
-    } catch (err) {
-      console.error('Logout failed', err);
-    } finally {
-      setLoading(false);
-    }
+  const checkAuth = async () => {
+    await checkAuthQuery();
   };
+
+  const loading = isAuthLoading || loginMutation.isPending || registerMutation.isPending || logoutMutation.isPending;
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user: user || null, loading, login, register, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );
