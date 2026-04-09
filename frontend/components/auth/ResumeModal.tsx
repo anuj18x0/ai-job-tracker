@@ -86,7 +86,7 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title="Manage Resume"
-      maxWidth="480px"
+      maxWidth="max-w-md"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={isUploading}>
@@ -144,7 +144,7 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
             {file ? file.name : "Click or drag to upload resume"}
           </div>
           <div className="text-xs text-[var(--text-tertiary)] mt-1">
-            PDF or DOCX up to 2MB
+            PDF or DOCX up to 4MB
           </div>
         </div>
 
