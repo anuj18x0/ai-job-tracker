@@ -23,8 +23,8 @@ graph TD
     end
 
     subgraph AI [Google Gemini AI]
-        JSON[Gemini 1.5 Flash - Structured Mode]
-        Stream[Gemini 1.5 Flash - Token Stream]
+        JSON[Gemini 2.5 Flash - Structured Mode]
+        Stream[Gemini 2.5 Flash - Token Stream]
     end
 
     subgraph Data [Cloud Infrastructure]
