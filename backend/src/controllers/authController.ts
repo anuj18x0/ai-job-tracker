@@ -138,7 +138,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select({ name: 1, email: 1, isVerified: 1, password: 1 });
+
 
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -147,6 +148,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     if (!user.isVerified) {
       return res.status(401).json({ success: false, message: 'Please verify your email first' });
     }
+    
 
     sendTokenResponse(user, 200, res);
   } catch (err: unknown) {
@@ -180,7 +182,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 // @access  Private
 export const getMe = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select({ name: 1, email: 1, isVerified: 1});;
     res.status(200).json({ success: true, user });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Server error';
