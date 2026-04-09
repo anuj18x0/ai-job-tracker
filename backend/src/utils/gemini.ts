@@ -16,12 +16,14 @@ const sanitizeInput = (text: string): string => {
 };
 
 export interface ParsedJobData {
+  isValidJobDescription: boolean;
   company: string;
   role: string;
   requiredSkills: string[];
   niceToHaveSkills: string[];
   seniority: string;
   location: string;
+  salaryRange: string;
 }
 
 /**
@@ -37,12 +39,14 @@ export const parseJobDescription = async (jd: string): Promise<ParsedJobData> =>
     """
     
     Return ONLY a JSON object with the following keys:
+    - isValidJobDescription (boolean: true if this looks like a job description, false if it is gibberish or unrelated)
     - company (string)
     - role (string)
     - requiredSkills (array of strings)
     - niceToHaveSkills (array of strings)
     - seniority (string, e.g., Junior, Mid, Senior, Lead)
     - location (string, e.g., Remote, San Francisco, CA)
+    - salaryRange (string, e.g., ₹100k - ₹120k)
     
     If any field is not found, use an empty string or empty array.
     Ensure the output is valid JSON.

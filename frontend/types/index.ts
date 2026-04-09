@@ -37,6 +37,7 @@ export interface ParsedJobDescription {
   niceToHaveSkills: string[];
   seniority: string;
   location: string;
+  salaryRange: string;
 }
 
 export interface ResumeSuggestion {

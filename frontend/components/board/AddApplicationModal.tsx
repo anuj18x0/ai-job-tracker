@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { Input, Textarea } from "@/components/ui/Input";
@@ -6,8 +8,8 @@ import Spinner from "@/components/ui/Spinner";
 import Badge from "@/components/ui/Badge";
 import type { ApplicationFormData, ParsedJobDescription, ApplicationStatus } from "@/types";
 import { parseJD } from "@/lib/api-client";
-import { Layout, Sparkles, Check } from "lucide-react";
-import { motion } from "framer-motion";
+import { Layout, Sparkles, Check, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface AddApplicationModalProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ export default function AddApplicationModal({
   const [rawJD, setRawJD] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [parsed, setParsed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<ApplicationFormData>({
     company: "",
     role: "",
@@ -47,12 +50,14 @@ export default function AddApplicationModal({
         ...prev,
         status: initialStatus || "applied"
       }));
+      setError(null);
     }
   }, [isOpen, initialStatus]);
 
   const handleParse = async () => {
     if (!rawJD.trim()) return;
     setIsParsing(true);
+    setError(null);
 
     try {
       const result = await parseJD(rawJD);
@@ -66,15 +71,16 @@ export default function AddApplicationModal({
           niceToHaveSkills: parsedData.niceToHaveSkills,
           seniority: parsedData.seniority,
           location: parsedData.location,
+          salaryRange: parsedData.salaryRange || "",
           rawJobDescription: rawJD,
         }));
         setParsed(true);
       } else {
-        alert(result.message || "Failed to parse JD");
+        setError(result.message || "Failed to parse JD");
       }
     } catch (err) {
       console.error("Failed to parse JD", err);
-      alert("An error occurred while parsing the job description.");
+      setError("An error occurred while parsing the job description.");
     } finally {
       setIsParsing(false);
     }
@@ -86,6 +92,7 @@ export default function AddApplicationModal({
     // Reset
     setRawJD("");
     setParsed(false);
+    setError(null);
     setFormData({
       company: "",
       role: "",
@@ -108,7 +115,7 @@ export default function AddApplicationModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Add Application"
-      maxWidth="620px"
+      maxWidth="max-w-xl"
       footer={
         <div className="flex items-center justify-end gap-3 w-full">
           <Button variant="secondary" onClick={onClose}>
@@ -127,7 +134,7 @@ export default function AddApplicationModal({
       <div className="flex flex-col gap-6 py-2">
         {/* AI Parse Section */}
         {!parsed && (
-          <div className="flex flex-col gap-4 p-5 rounded-2xl bg-secondary/30 border border-border/50">
+          <div className="flex flex-col gap-4 p-5 rounded-2xl bg-secondary/30">
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-bold text-foreground flex items-center gap-2">
                 <Layout className="w-3.5 h-3.5 text-green" />
@@ -139,28 +146,38 @@ export default function AddApplicationModal({
                 onChange={(e) => {
                   setRawJD(e.target.value);
                   setFormData(prev => ({ ...prev, rawJobDescription: e.target.value }));
+                  if (error) setError(null);
                 }}
                 className="min-h-[140px] bg-background resize-none"
               />
             </div>
             
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-[13px] font-medium">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <Button
               onClick={handleParse}
               isLoading={isParsing}
               disabled={!rawJD.trim()}
               className="w-full h-11 shadow-sm"
             >
-              {isParsing ? (
-                <div className="flex items-center gap-2">
-                  <Spinner size="sm" /> 
-                  <span>AI is parsing...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Parse with Gemini AI</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {!isParsing && <Sparkles className="w-4 h-4" />}
+                <span>{isParsing ? "AI is parsing..." : "Parse with Gemini AI"}</span>
+              </div>
             </Button>
           </div>
         )}
@@ -240,7 +257,7 @@ export default function AddApplicationModal({
             />
             <Input
               label="Salary Range"
-              placeholder="e.g., $120k - $150k"
+              placeholder="e.g., ₹100k - ₹150k"
               value={formData.salaryRange}
               onChange={(e) => setFormData({ ...formData, salaryRange: e.target.value })}
             />
@@ -264,7 +281,7 @@ export default function AddApplicationModal({
 
           {/* Skills display */}
           {(formData.requiredSkills.length > 0 || formData.niceToHaveSkills.length > 0) && (
-            <div className="flex flex-col gap-4 mt-2 p-5 rounded-2xl bg-secondary/20 border border-border/50">
+            <div className="flex flex-col gap-4 mt-2 p-5 rounded-2xl bg-secondary/20 bg-opacity-50">
               {formData.requiredSkills.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">

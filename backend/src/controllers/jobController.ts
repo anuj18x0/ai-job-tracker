@@ -102,6 +102,11 @@ export const parseJD = async (req: AuthRequest, res: Response, next: NextFunctio
     }
 
     const data = await parseJobDescription(jd);
+    
+    if (data.isValidJobDescription === false) {
+      return res.status(400).json({ success: false, message: "The pasted text does not appear to be a valid Job Description." });
+    }
+
     res.status(200).json({ success: true, data });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'AI parsing failed';

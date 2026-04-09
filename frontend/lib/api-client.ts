@@ -1,6 +1,6 @@
 import type { ApplicationFormData, JobApplication } from '@/types';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 /**
  * Authentication and User-related API calls (Client-side)
