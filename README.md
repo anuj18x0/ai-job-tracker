@@ -1,6 +1,6 @@
-# 🚀 JobTrackr: AI-Powered Job Application Tracker
+# 🚀 JobTracker: AI-Powered Job Application Tracker
 
-JobTrackr is a premium SaaS interface designed to streamline the job application process. By leveraging the **Gemini 1.5 Flash AI Engine**, it automatically extracts details from job descriptions and provides real-time, tailored resume optimization suggestions via streaming SSE (Server-Sent Events).
+JobTracker is a premium SaaS interface designed to streamline the job application process. By leveraging the **Gemini 1.5 Flash AI Engine**, it automatically extracts details from job descriptions and provides real-time, tailored resume optimization suggestions via streaming SSE (Server-Sent Events).
 
 ---
 
@@ -68,11 +68,13 @@ graph TD
 ## ⚙️ Development Setup
 
 ### 1. Prerequisites
+
 - Node.js (v18+)
 - MongoDB (Running locally or Atlas URI)
 - Google AI (Gemini) API Key
 
 ### 2. Backend Setup
+
 ```bash
 cd backend
 npm install
@@ -85,6 +87,7 @@ npm run dev
 ```
 
 ### 3. Frontend Setup
+
 ```bash
 cd frontend
 npm install
@@ -96,9 +99,11 @@ npm run dev
 ---
 
 ## 🌑 Dark Mode & Design System
+
 The app uses a curated high-contrast dark theme by default, featuring `backdrop-blur-xl` surfaces, `3xl` border radius, and premium typography. It supports toggleable themes via the `ThemeToggle` component.
 
 ---
 
 ## 📝 License
+
 MIT License - Created for High-Performance Recruitment Tracking.

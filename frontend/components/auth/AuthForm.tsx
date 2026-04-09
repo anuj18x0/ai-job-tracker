@@ -57,7 +57,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         </h1>
         <p className="text-sm m-0">
           {mode === "login"
-            ? "Sign in to your JobTrackr account"
+            ? "Sign in to your JobTracker account"
             : "Start tracking your job applications"}
         </p>
       </div>

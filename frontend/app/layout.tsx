@@ -12,7 +12,7 @@ const raleway = Raleway({
 });
 
 export const metadata: Metadata = {
-  title: "JobTrackr — AI-Powered Job Application Tracker",
+  title: "JobTracker — AI-Powered Job Application Tracker",
   description:
     "Track your job applications on a Kanban board. AI parses job descriptions and generates tailored resume suggestions.",
 };
