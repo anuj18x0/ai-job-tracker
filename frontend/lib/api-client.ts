@@ -1,6 +1,10 @@
 import type { ApplicationFormData, JobApplication } from '@/types';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+// By making this an empty string, we FORCE the browser to send API requests
+// to the Vercel frontend domain. Vercel's next.config.ts then catches these
+// requests and silently proxies them to Railway.
+// This is the ONLY way cookies can be shared successfully between different domains!
+const BACKEND_URL = "";
 
 /**
  * Authentication and User-related API calls (Client-side)
