@@ -13,16 +13,18 @@ export function middleware(request: NextRequest) {
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
   // Get the access token from cookies
-  const token = request.cookies.get('accessToken');
+  const tokenCookie = request.cookies.get('accessToken');
+  const token = tokenCookie?.value;
+  const isAuthenticated = token && token !== 'none';
 
-  // Redirect to login if accessing a protected route without a token
-  if (isProtected && !token) {
+  // Redirect to login if accessing a protected route without a valid token
+  if (isProtected && !isAuthenticated) {
     const url = new URL('/login', request.url);
     return NextResponse.redirect(url);
   }
 
   // Redirect to dashboard if accessing auth routes while logged in
-  if (isAuthRoute && token) {
+  if (isAuthRoute && isAuthenticated) {
     const url = new URL('/board', request.url);
     return NextResponse.redirect(url);
   }

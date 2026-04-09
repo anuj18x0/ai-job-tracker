@@ -6,12 +6,15 @@ import ResumeModal from "@/components/auth/ResumeModal";
 import Button from "@/components/ui/Button";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { useBoard } from "@/context/BoardContext";
-import { Search, Plus, Filter, User, Briefcase, FileText } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Search, Plus, Filter, User, Briefcase, FileText, LogOut } from "lucide-react";
 import { KANBAN_COLUMNS } from "@/lib/constants";
 
 export default function Header() {
   const [isResumeOpen, setIsResumeOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { searchQuery, setSearchQuery, filterStatus, setFilterStatus, openAddModal } = useBoard();
+  const { logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -99,13 +102,38 @@ export default function Header() {
 
             <ThemeToggle />
 
-            <Link
-              href="/profile"
-              className="w-8 h-8 rounded-full bg-secondary/50 hover:bg-secondary transition-all duration-200 flex items-center justify-center active:scale-95 hover:-translate-y-0.5"
-              aria-label="Profile"
-            >
-              <User className="w-4 h-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-            </Link>
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className={`w-8 h-8 rounded-full transition-all duration-200 flex items-center justify-center hover:-translate-y-0.5 ${isProfileOpen ? 'bg-secondary' : 'bg-secondary/50 hover:bg-secondary'}`}
+                aria-label="Profile"
+              >
+                <User className={`w-4 h-4 transition-colors ${isProfileOpen ? 'text-foreground' : 'text-muted-foreground'}`} />
+              </button>
+
+              {isProfileOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsProfileOpen(false)} 
+                  />
+                  <div className="absolute right-0 mt-2 w-48 bg-background border border-border/50 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden animate-fade-in-up">
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        logout();
+                        window.location.href='/'
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left font-medium"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
